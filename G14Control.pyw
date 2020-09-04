@@ -15,15 +15,42 @@ import winreg
 from threading import Thread
 import MatrixController
 from win10toast import ToastNotifier
+import math
+import random
+import copy
+class point:
+    def __init__(self):
+        self.x = 0
+        self.y = 0
+        self.val = 0
 
 showFlash = False
 mc = MatrixController.MatrixController()
 inputMatrix = []
 for i in range(len(mc.rowWidths)):
     inputMatrix.append([0xff]*mc.rowWidths[i])
-
 toaster = ToastNotifier()
 current_boost_mode = 0
+
+
+newDotDelay = 80
+threshold = 30
+newDotCounter = 60
+dotLength = 120
+dot = point()
+dots = []
+
+def getDist(a, b):
+    return math.sqrt((a.y - b.y) * (a.y - b.y) + (a.x - b.x) * (a.x - b.x))
+    
+def remap(source, ol, oh, nl, nh):
+    orr = oh - ol
+    nr = nh - nl;
+    rat = nr / orr;
+    return int((source - ol) * rat + nl)
+
+
+
 
 
 def get_power_plans():
@@ -349,16 +376,56 @@ def apply_plan(plan):
 
 
 def quit_app():
+    mc.clearMatrix()
     icon_app.stop()  # This will destroy the the tray icon gracefully.
 
 def flash_animatrix():
     global showFlash
+    global inputMatrix
+    global frame
+    global newDotDelay
+    global threshold
+    global newDotCounter
+    global dotLength
+    global dot
+    global dots
     while(True):
         if showFlash:
-            mc.drawMatrix(inputMatrix)
-        time.sleep(1)
-        mc.clearMatrix()
-        time.sleep(1)
+            for i in range(len(mc.rowWidths)):
+                for j in range(mc.rowWidths[i]):
+                    frame[i][j].val = 0
+            if newDotCounter >= newDotDelay:
+                newDotCounter = 0
+                newDot = point()
+                newDot.y = random.randint(0, 54)
+                newDot.x = random.randint(0, mc.rowWidths[newDot.y]-1)
+                newDot.val = 0;
+                newDot = frame[newDot.y][newDot.x];
+                dots.append(copy.deepcopy(newDot));
+            else:
+                newDotCounter += 4
+            for i in range(len(dots)):
+                if dots[i].val >= dotLength:
+                    del dots[i]
+                    break
+                else:
+                    dots[i].val += 4
+
+            for i in range(len(mc.rowWidths)):
+                for j in range(mc.rowWidths[i]):
+                    for k in range(len(dots)):
+                        #print(dots[k].x, " ", dots[k].y)
+                        if abs(getDist(dots[k], frame[i][j]) - dots[k].val * 1.5) < 20:
+                            frame[i][j].val = remap(20 - abs(getDist(dots[k], frame[i][j]) - dots[k].val * 1.5), 0, 20, 0, min(dots[k].val*10, max(0, 255 -  dots[k].val*3.5)))
+                        elif dots[k].val > 60 and abs(getDist(dots[k], frame[i][j]) - (dots[k].val - 60) * 1.5) < 20:
+                            frame[i][j].val = remap(20 - abs(getDist(dots[k], frame[i][j]) - (dots[k].val - 60) * 1.5), 0, 20, 0, min(dots[k].val*10, max(0, 255 - (dots[k].val - 45) * 4)))
+            for i in range(len(mc.rowWidths)):
+                for j in range(mc.rowWidths[i]):
+                    inputMatrix[i][j] = int(frame[i][j].val)
+            mc.drawMatrix(inputMatrix);
+        else:
+            time.sleep(5)
+            mc.clearMatrix()
 
 def enable_animatrix():
     global showFlash
@@ -464,12 +531,24 @@ def startup_checks():
 
 
 if __name__ == "__main__":
+    frame = []
     G14dir = None
     get_app_path()
     config = load_config()  # Make the config available to the whole script
     dpp_GUID = None
     app_GUID = None
     get_power_plans()
+    for i in range(len(mc.rowWidths)):
+        y = 66 + i * 11
+        temp = []
+        for j in range(mc.rowWidths[i]):
+            x = 1080 - (45 + j * 30 + (i % 2) * 15)
+            t = point()
+            t.x = x;
+            t.y = y;
+            t.val = 0;
+            temp.append(copy.deepcopy(t))
+        frame.append(copy.deepcopy(temp))
     if is_admin() or config['debug']:  # If running as admin or in debug mode, launch program
         #global dpp_GUID, app_GUID
         #print("dpp_GUID: ", dpp_GUID)
