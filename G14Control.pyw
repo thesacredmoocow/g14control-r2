@@ -25,10 +25,7 @@ class point:
         self.val = 0
 
 showFlash = False
-mc = MatrixController.MatrixController()
-inputMatrix = []
-for i in range(len(mc.rowWidths)):
-    inputMatrix.append([0xff]*mc.rowWidths[i])
+
 toaster = ToastNotifier()
 current_boost_mode = 0
 
@@ -68,14 +65,11 @@ def set_power_plan(GUID):
 
 def get_app_path():
     global G14dir
+    
     if getattr(sys, 'frozen', False):   # Sets the path accordingly whether it is a python script or a frozen .exe
-        G14dir = "C:\\G14control"
+        G14dir = os.path.dirname(os.path.realpath(sys.executable))
     elif __file__:
-        G14dir = os.getcwd()
-    #G14dir = os.getcwd()
-    #if G14dir == "C:\\Windows\\System32":
-        #G14dir = "C:\\G14control"
-
+        G14dir = os.path.dirname(os.path.realpath(__file__))
 def parse_boolean(parse_string):  # Small utility to convert windows HEX format to a boolean.
     try:
         if parse_string == "0x00000000":  # We will consider this as False
@@ -143,7 +137,7 @@ def deactivate_powerswitching():
 
 
 def gaming_check():     # Checks if user specified games/programs are running, and switches to user defined plan, then switches back once closed
-    global default_gaming_plan, default_gaming_plan_games
+    global  _plan, default_gaming_plan_games
     previous_plan = None    # Define the previous plan to switch back to
     while True: # Continuously check every 10 seconds
         processes = set(p.name() for p in psutil.process_iter())    # List of windows processes
@@ -376,7 +370,9 @@ def apply_plan(plan):
 
 
 def quit_app():
-    mc.clearMatrix()
+    global mc
+    if config["use_animatrix"]:
+        mc.clearMatrix()
     icon_app.stop()  # This will destroy the the tray icon gracefully.
 
 def flash_animatrix():
@@ -389,6 +385,7 @@ def flash_animatrix():
     global dotLength
     global dot
     global dots
+    global mc
     while(True):
         if showFlash:
             for i in range(len(mc.rowWidths)):
@@ -466,8 +463,8 @@ def create_menu():  # This will create the menu in the tray app
         # I have no idea of what I am doing, fo real, man.
         *list(map((lambda plan: pystray.MenuItem(plan['name'], (lambda: (apply_plan(plan),deactivate_powerswitching())))), config['plans'])),  # Blame @dedo1911 for this. You can find him on github.
         pystray.Menu.SEPARATOR,
-        pystray.MenuItem("Enable AniMatrix", enable_animatrix),
-        pystray.MenuItem("Disable AniMatrix", disable_animatrix),
+        pystray.MenuItem("Enable AniMatrix", enable_animatrix, visible=config["use_animatrix"]),
+        pystray.MenuItem("Disable AniMatrix", disable_animatrix, visible=config["use_animatrix"]),
         pystray.Menu.SEPARATOR,
         pystray.MenuItem("Quit", quit_app)  # This to close the app, we will need it.
     )
@@ -538,17 +535,22 @@ if __name__ == "__main__":
     dpp_GUID = None
     app_GUID = None
     get_power_plans()
-    for i in range(len(mc.rowWidths)):
-        y = 66 + i * 11
-        temp = []
-        for j in range(mc.rowWidths[i]):
-            x = 1080 - (45 + j * 30 + (i % 2) * 15)
-            t = point()
-            t.x = x;
-            t.y = y;
-            t.val = 0;
-            temp.append(copy.deepcopy(t))
-        frame.append(copy.deepcopy(temp))
+    if(config['use_animatrix']):
+        mc = MatrixController.MatrixController()
+        inputMatrix = []
+        for i in range(len(mc.rowWidths)):
+            inputMatrix.append([0xff]*mc.rowWidths[i])
+        for i in range(len(mc.rowWidths)):
+            y = 66 + i * 11
+            temp = []
+            for j in range(mc.rowWidths[i]):
+                x = 1080 - (45 + j * 30 + (i % 2) * 15)
+                t = point()
+                t.x = x;
+                t.y = y;
+                t.val = 0;
+                temp.append(copy.deepcopy(t))
+            frame.append(copy.deepcopy(temp))
     if is_admin() or config['debug']:  # If running as admin or in debug mode, launch program
         #global dpp_GUID, app_GUID
         #print("dpp_GUID: ", dpp_GUID)
@@ -561,7 +563,8 @@ if __name__ == "__main__":
         resources.extract(config['temp_dir'])
         startup_checks()
         Thread(target=power_check, daemon=True).start()  # A process in the background will check for AC, autoswitch plan if enabled and detected
-        Thread(target=flash_animatrix, daemon=True).start()
+        if(config['use_animatrix']):
+            Thread(target=flash_animatrix, daemon=True).start()
         icon_app = pystray.Icon(config['app_name'])  # Initialize the icon app and set its name
         icon_app.title = config['app_name']  # This is the displayed name when hovering on the icon
         icon_app.icon = create_icon()  # This will set the icon itself (the graphical icon)
