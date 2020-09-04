@@ -1,7 +1,9 @@
 # NOTE:
 This is an upstream fork of https://github.com/CappyT/g14control that has features and bug fixes that are not yet deemed stable for the official release, but that I have tested and are stable enough for my day-to-day use. There will be new EXEs bundled in the [releases](https://github.com/carverhaines/g14control/releases/latest) section that will be released between official releases by CappyT. For those that want the bleeding edge updates/testing branches (but testing and working).
 
-## G14Control
+This is another newer version which I call G14Control r2, it incorporates animatrix control, windows power plan switching, and some other bits and bug fixes.
+
+## G14Control r2
 ## A simple tray app to control Asus Zephyrus G14 Power options
 
 #### Background:
@@ -18,7 +20,7 @@ Not yet fully. See TODO for information about that.
 While is possible to port this app to Linux, at the moment is engineered to work only on Windows. It will be ported to Linux someday as I see the need for it.
 
 ### Installation
-Download the latest release zip from GitHub: https://github.com/CappyT/g14control/releases
+Download the latest release zip from GitHub: https://github.com/thesacredmoocow/g14control-r2/releases
 
 Extract it to some permanent location such as C:\Users\[username]\G14Control
 
@@ -108,14 +110,13 @@ You are very free to contribute with your code. I kinda suck at coding so any he
 - ~~ryzenadj command integration~~ Implemented
 - ~~Parallel notification spawning (right now when notification is displayed the whole app locks until the notification disappears)~~ Kinda buggy, but better.
 - Different options for AC/DC modes
-- Windows power plan switching (is it needed?)
 - Logging
 - Better binary storage
 - Better UI (?)
 - Better code comments
 - Better ~~engrish~~ english (sorry, is just not my native language)
 - .... you tell us!
-
+- mode switching upon launching games
 ### Contributors:
 - https://github.com/FlyGoat/RyzenAdj
 - https://github.com/cronosun/atrofac
