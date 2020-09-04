@@ -1,0 +1,17 @@
+astroid==2.4.2
+colorama==0.4.3
+isort==4.3.21
+lazy-object-proxy==1.5.0
+mccabe==0.6.1
+Pillow==7.2.0
+pylint==2.5.3
+pypiwin32==223
+pystray==0.17.1
+pywin32==228
+PyYAML==5.3.1
+six==1.15.0
+toml==0.10.1
+wrapt==1.12.1
+psutil==5.7.0
+cx_Freeze==6.1
+win10toast==0.9
