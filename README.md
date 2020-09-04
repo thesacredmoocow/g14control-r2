@@ -1,7 +1,7 @@
 # NOTE:
 This is an upstream fork of https://github.com/CappyT/g14control that has features and bug fixes that are not yet deemed stable for the official release, but that I have tested and are stable enough for my day-to-day use. There will be new EXEs bundled in the [releases](https://github.com/carverhaines/g14control/releases/latest) section that will be released between official releases by CappyT. For those that want the bleeding edge updates/testing branches (but testing and working).
 
-This is another newer version which I call G14Control r2, it incorporates animatrix control, windows power plan switching, and some other bits and bug fixes.
+This is another newer version which I (thesacredmoocow) call G14Control r2, it incorporates animatrix control, windows power plan switching, and some other bits and bug fixes.
 
 ## G14Control r2
 ## A simple tray app to control Asus Zephyrus G14 Power options
