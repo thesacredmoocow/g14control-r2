@@ -473,7 +473,7 @@ def create_menu():  # This will create the menu in the tray app
 
 def load_config():  # Small function to load the config and return it after parsing
     global G14dir
-    config_loc = os.path.join(G14dir,"config.yml")      # Set absolute path for config.yaml
+    config_loc = os.path.join(G14dir,"data\config.yml")      # Set absolute path for config.yaml
     with open(config_loc, 'r') as config_file:
         return yaml.load(config_file, Loader=yaml.FullLoader)
 
