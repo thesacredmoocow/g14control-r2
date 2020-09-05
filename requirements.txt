@@ -14,3 +14,4 @@ toml==0.10.1
 wrapt==1.12.1
 psutil==5.7.0
 cx_Freeze==6.1
+keyboard==0.13.5

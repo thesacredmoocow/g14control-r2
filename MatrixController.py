@@ -1,5 +1,7 @@
 from winusbpy import *
 import time
+import keyboard
+import random
 class MatrixController(object):
     vid = "0b05"
     pid = "193b"
@@ -134,40 +136,94 @@ class MatrixController(object):
         self.api.control_transfer(self.setupPacket, self.secondPane)
         self.api.control_transfer(self.setupPacket, self.flushPacket)
         return True
-"""
-if (i < 20)
-{
-    if (i == 0)
-    {
-        for (int j = 0; j < arr[i].size()-1; j++)
-        {
-            firstPane[rowIndex[i][1] - j] = arr[i][int(j)+1];
-        }
-    }
-    else
-    {
-        for (int j = 0; j < arr[i].size(); j++)
-        {
-            firstPane[rowIndex[i][1] - j] = arr[i][j];
-        }
-    }
-}
-else if (i > 20)
-{
-    for (int j = 0; j < arr[i].size(); j++)
-    {
-        secondPane[rowIndex[i][1] - j] = arr[i][j];
-    }
-}
-else if (i == 20)
-{
-    for (int j = 0; j < 23; j++)
-    {
-        secondPane[29 - j] = arr[i][j];
-    }
-    for (int j = 23; j < 26; j++)
-    {
-        firstPane[rowIndex[i][1] - j] = arr[i][j];
-    }
-}
-"""
+
+    def playSnake(self):
+        inverseSpeed = 8
+        snake = [[0, 3], [0, 2], [0, 1]]
+        snakeDir = 1
+        alive = True
+        movementCounter = 0
+        changed = False
+        goal = []
+        goal.append(random.randint(0, 24)*2)
+        goal.append(random.randint(1, self.rowWidths[goal[0]]-1))
+        inputMatrix = []
+        for i in range(len(self.rowWidths)):
+            inputMatrix.append([0x00]*self.rowWidths[i])
+        for i in snake:
+            inputMatrix[i[0]][i[1]] = 0xff;
+        inputMatrix[goal[0]][goal[1]] = 0xff
+        self.drawMatrix(inputMatrix)
+        keyboard.wait('d')
+        while alive:
+            time.sleep(0.01)
+            try:
+                if keyboard.is_pressed('esc'):
+                    break
+            except:
+                pass
+            try:  # used try so that if user pressed other than the given key error will not be shown
+                if keyboard.is_pressed('w') and (snakeDir == 3 or snakeDir == 1) and changed == False:
+                    snakeDir = 0
+                    changed = True
+            except:
+                pass
+            try:  # used try so that if user pressed other than the given key error will not be shown
+                if keyboard.is_pressed('a') and (snakeDir == 0 or snakeDir == 2) and changed == False:
+                    snakeDir = 3
+                    changed = True
+            except:
+                pass
+            try:  # used try so that if user pressed other than the given key error will not be shown
+                if keyboard.is_pressed('s') and (snakeDir == 3 or snakeDir == 1) and changed == False:
+                    snakeDir = 2
+                    changed = True
+            except:
+                pass
+            try:  # used try so that if user pressed other than the given key error will not be shown
+                if keyboard.is_pressed('d') and (snakeDir == 0 or snakeDir == 2) and changed == False:
+                    snakeDir = 1
+                    changed = True
+            except:
+                pass
+            movementCounter += 1
+            if movementCounter >= inverseSpeed:
+                changed = False
+                if snakeDir == 0:
+                    snake.insert(0, [snake[0][0]+2, snake[0][1]])
+                elif snakeDir == 1:
+                    snake.insert(0, [snake[0][0], snake[0][1]+1])
+                elif snakeDir == 2:
+                    snake.insert(0, [snake[0][0]-2, snake[0][1]])
+                elif snakeDir == 3:
+                    snake.insert(0, [snake[0][0], snake[0][1]-1])
+                if(snake[0] == goal):
+                    goal[0] = random.randint(0, 24)*2
+                    goal[1] = random.randint(1, self.rowWidths[goal[0]]-1)
+                else:
+                    del snake[len(snake)-1]
+                for i in range(1, len(snake)):
+                    if(snake[0] == snake[i]):
+                        alive = False
+                        break
+                if snake[0][0] < 0 or snake[0][0] >= 55 or snake[0][1] < 0 or snake[0][1] >= self.rowWidths[snake[0][0]]:
+                    alive = False
+                if alive == False:
+                    break
+                inputMatrix = []
+                for i in range(len(self.rowWidths)):
+                    inputMatrix.append([0x00]*self.rowWidths[i])
+                for i in snake:
+                    inputMatrix[i[0]][i[1]] = 0xff;
+                inputMatrix[goal[0]][goal[1]] = 0xff
+                movementCounter = 0
+                self.drawMatrix(inputMatrix)
+        if alive == False:
+            inputMatrix = []
+            for i in range(len(self.rowWidths)):
+                inputMatrix.append([0xff]*self.rowWidths[i])
+            self.drawMatrix(inputMatrix)
+            time.sleep(1.5)
+        self.clearMatrix()
+        
+    

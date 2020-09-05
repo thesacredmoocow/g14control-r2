@@ -45,10 +45,6 @@ def remap(source, ol, oh, nl, nh):
     rat = nr / orr;
     return int((source - ol) * rat + nl)
 
-
-
-
-
 def get_power_plans():
     global dpp_GUID, app_GUID
     all_plans = subprocess.check_output(["powercfg", "/l"])
@@ -436,6 +432,14 @@ def disable_animatrix():
     notify("Animatrix Disabled")
     showFlash = False
 
+def play_snake():
+    global mc
+    global showFlash
+    prev_flash_state = showFlash
+    showFlash = False
+    mc.playSnake()
+    showFlash - prev_flash_state
+
 def create_menu():  # This will create the menu in the tray app
     global dpp_GUID, app_GUID
     menu = pystray.Menu(
@@ -467,6 +471,7 @@ def create_menu():  # This will create the menu in the tray app
         pystray.Menu.SEPARATOR,
         pystray.MenuItem("Enable AniMatrix", enable_animatrix, visible=config["use_animatrix"]),
         pystray.MenuItem("Disable AniMatrix", disable_animatrix, visible=config["use_animatrix"]),
+        pystray.MenuItem("Play Snake", play_snake, visible=config["use_animatrix"]),
         pystray.Menu.SEPARATOR,
         pystray.MenuItem("Quit", quit_app)  # This to close the app, we will need it.
     )
