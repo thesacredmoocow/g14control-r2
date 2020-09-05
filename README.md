@@ -14,7 +14,7 @@ It does combine all the option offered from other utilities into one, single, co
 G14Control (you can even rename it) can control the current ASUS Power plan, Fan curve, Processor Boost Mode, Processor TDP, dGPU Activation and Screen refresh rate to your needs with a simple right click on the Windows taskbar. You can configure all the presets (and add new ones too) from the `config.yml` file.
 
 #### Does it work?
-Not yet fully. Upon turning off dGPU, the program updates windows power plan and forces a restart of the dGPU in device manager. Currently only functional with the 2060MQ models.
+Not yet fully. Upon turning off dGPU, the program updates windows power plan and forces a restart of the dGPU in device manager. Forcing a dGPU restart is only functional with the 2060MQ models currently.
 
 #### What about Linux?
 While is possible to port this app to Linux, at the moment is engineered to work only on Windows.
