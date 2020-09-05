@@ -14,7 +14,7 @@ It does combine all the option offered from other utilities into one, single, co
 G14Control (you can even rename it) can control the current ASUS Power plan, Fan curve, Processor Boost Mode, Processor TDP, dGPU Activation and Screen refresh rate to your needs with a simple right click on the Windows taskbar. You can configure all the presets (and add new ones too) from the `config.yml` file.
 
 #### Does it work?
-Not yet fully. Upon turning off dGPU, the program updates windows power plan and forces a restart of the dGPU in device manager. Currently only functional with the 2060MQ models.
+Not yet fully. Upon turning off dGPU, the program updates windows power plan and forces a restart of the dGPU in device manager. Forcing a dGPU restart is only functional with the 2060MQ models currently.
 
 #### What about Linux?
 While is possible to port this app to Linux, at the moment is engineered to work only on Windows.
@@ -46,9 +46,9 @@ Alternatively to make it run on boot WITHOUT UAC prompt, you will have to create
 `default_dc_plan` This plan name will automatically enable when on battery power (set both default_ac_plan and default_dc_plan to `null` to disable this feature)
 
 `default_gaming_plan` Enable this if you want the program to auto-switch plans based on games (or any program really) running. It will automatically switch to the plan specified here when the program is launched, and automatically switch back to the previous plan once it has closed. Set to `null` to disable.
-- WARNING: this may be more resource intensive as it polls running processes on your computer every 10 seconds. However I noticed little difference, and almost no score change on Heaven Benchmark (FPS +/- 2). *does not work at the moment*
+- WARNING: this may be more resource intensive as it polls running processes on your computer every 10 seconds. However I noticed little difference, and almost no score change on Heaven Benchmark (FPS +/- 2).
 
-`default_gaming_plan_games` This will be a list of exe's that you want to detect. Please check the exact name of the exe. For example, Steam is SteamService.exe. Example list: ["7zFM.exe", "notepad++.exe", "SteamService.exe"] *does not work at the moment*
+`default_gaming_plan_games` This will be a list of exe's that you want to detect. Please check the exact name of the exe. For example, Steam is SteamService.exe. Example list: ["7zFM.exe", "notepad++.exe", "SteamService.exe"]
 
 ##### Notes on using Auto Power Switching:
 - Only available if `default_ac_plan` and `default_dc_plan` are set in config (set to `null` to disable)
