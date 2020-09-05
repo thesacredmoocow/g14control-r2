@@ -14,10 +14,10 @@ import resources
 import winreg
 from threading import Thread
 import MatrixController
-from win10toast import ToastNotifier
 import math
 import random
 import copy
+
 class point:
     def __init__(self):
         self.x = 0
@@ -26,7 +26,6 @@ class point:
 
 showFlash = False
 
-toaster = ToastNotifier()
 current_boost_mode = 0
 
 
@@ -139,8 +138,11 @@ def deactivate_powerswitching():
 def gaming_check():     # Checks if user specified games/programs are running, and switches to user defined plan, then switches back once closed
     global  _plan, default_gaming_plan_games
     previous_plan = None    # Define the previous plan to switch back to
+
     while True: # Continuously check every 10 seconds
-        processes = set(p.name() for p in psutil.process_iter())    # List of windows processes
+        output = os.popen('wmic process get description, processid').read() 
+        process = output.split("\n")
+        processes = set(i.split(" ")[0] for i in process)
         targets = set(default_gaming_plan_games)    # List of user defined processes
         if processes & targets:     # Compare 2 lists, if ANY overlap, set game_running to true
             game_running = True
@@ -152,6 +154,7 @@ def gaming_check():     # Checks if user specified games/programs are running, a
                 if plan['name'] == default_gaming_plan:
                     break
             apply_plan(plan)
+            notify(plan['name'])
         if not game_running and previous_plan is not None and previous_plan != current_plan:    # If game is no longer running, and not on previous plan already (if set), then switch back to previous plan
             for plan in config['plans']:
                 if plan['name'] == previous_plan:
@@ -165,11 +168,10 @@ def notify(message):
 
 
 def do_notify(message):
-    global G14dir
-    toaster.show_toast(config['app_name'],
-                   message,
-                   icon_path=G14dir+"\\res\\icon.ico",
-                   duration=config['notification_time'])
+    global icon_app
+    icon_app.notify(message)  # Display the provided argument as message
+    time.sleep(config['notification_time'])  # The message is displayed for the configured time. This is blocking.
+    icon_app.remove_notification()  # Then, we will remove the notification
 
 #(["Disabled", "Enabled", "Aggressive", "Efficient Enabled", "Efficient Aggressive"][int(get_boost()[2:])])
 def get_current():
@@ -473,7 +475,11 @@ def create_menu():  # This will create the menu in the tray app
 
 def load_config():  # Small function to load the config and return it after parsing
     global G14dir
-    config_loc = os.path.join(G14dir,"data\config.yml")      # Set absolute path for config.yaml
+    if getattr(sys, 'frozen', False):   # Sets the path accordingly whether it is a python script or a frozen .exe
+        config_loc = os.path.join(G14dir,"config.yml")      # Set absolute path for config.yaml
+    elif __file__:
+        config_loc = os.path.join(G14dir,"data\config.yml")      # Set absolute path for config.yaml
+    
     with open(config_loc, 'r') as config_file:
         return yaml.load(config_file, Loader=yaml.FullLoader)
 
@@ -565,6 +571,11 @@ if __name__ == "__main__":
         Thread(target=power_check, daemon=True).start()  # A process in the background will check for AC, autoswitch plan if enabled and detected
         if(config['use_animatrix']):
             Thread(target=flash_animatrix, daemon=True).start()
+        if(config['default_gaming_plan'] != None and config['default_gaming_plan_games'] != None):
+            #print(config['default_gaming_plan'], config['default_gaming_plan_games'])
+            Thread(target=gaming_check, daemon=True).start()
+        default_gaming_plan = config['default_gaming_plan']
+        default_gaming_plan_games = config['default_gaming_plan_games']
         icon_app = pystray.Icon(config['app_name'])  # Initialize the icon app and set its name
         icon_app.title = config['app_name']  # This is the displayed name when hovering on the icon
         icon_app.icon = create_icon()  # This will set the icon itself (the graphical icon)

@@ -14,4 +14,3 @@ toml==0.10.1
 wrapt==1.12.1
 psutil==5.7.0
 cx_Freeze==6.1
-win10toast==0.9
