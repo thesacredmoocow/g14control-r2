@@ -14,11 +14,10 @@ It does combine all the option offered from other utilities into one, single, co
 G14Control (you can even rename it) can control the current ASUS Power plan, Fan curve, Processor Boost Mode, Processor TDP, dGPU Activation and Screen refresh rate to your needs with a simple right click on the Windows taskbar. You can configure all the presets (and add new ones too) from the `config.yml` file.
 
 #### Does it work?
-Not yet fully. See TODO for information about that.
+Not yet fully. Upon turning off dGPU, the program updates windows power plan and forces a restart of the dGPU in device manager. Currently only functional with the 2060MQ models.
 
 #### What about Linux?
-While is possible to port this app to Linux, at the moment is engineered to work only on Windows. It will be ported to Linux someday as I see the need for it.
-
+While is possible to port this app to Linux, at the moment is engineered to work only on Windows.
 ### Installation
 Download the latest release zip from GitHub: https://github.com/thesacredmoocow/g14control-r2/releases
 
@@ -28,6 +27,11 @@ Edit the config.yml with text editor as needed (see configuring below)
 
 ### Configuring
 All done in config.yaml within the root folder of the program. The program must be restarted for any changes to the config.yaml to take effect.
+
+#### `default_power_plan` and `alt_power_plan` MUST BE SET IN ORDER FOR POWER PLAN SETTINGS TO WORK (BOOST, dGPU toggling)
+by default, the default power plan is "balanced" and the alt_power plan is "temp power plan". you need to set these to the names of your windows power plans, ie high performance, battery saver, etc. 
+
+`use_animatrix` enable only if you have animatrix and have installed the drivers included in this repository
 
 `app_name:` can be customized, this is what the hover text displays over the icon and the windows notification title
 
@@ -42,9 +46,9 @@ Alternatively to make it run on boot WITHOUT UAC prompt, you will have to create
 `default_dc_plan` This plan name will automatically enable when on battery power (set both default_ac_plan and default_dc_plan to `null` to disable this feature)
 
 `default_gaming_plan` Enable this if you want the program to auto-switch plans based on games (or any program really) running. It will automatically switch to the plan specified here when the program is launched, and automatically switch back to the previous plan once it has closed. Set to `null` to disable.
-- WARNING: this may be more resource intensive as it polls running processes on your computer every 10 seconds. However I noticed little difference, and almost no score change on Heaven Benchmark (FPS +/- 2).
+- WARNING: this may be more resource intensive as it polls running processes on your computer every 10 seconds. However I noticed little difference, and almost no score change on Heaven Benchmark (FPS +/- 2). *does not work at the moment*
 
-`default_gaming_plan_games` This will be a list of exe's that you want to detect. Please check the exact name of the exe. For example, Steam is SteamService.exe. Example list: ["7zFM.exe", "notepad++.exe", "SteamService.exe"]
+`default_gaming_plan_games` This will be a list of exe's that you want to detect. Please check the exact name of the exe. For example, Steam is SteamService.exe. Example list: ["7zFM.exe", "notepad++.exe", "SteamService.exe"] *does not work at the moment*
 
 ##### Notes on using Auto Power Switching:
 - Only available if `default_ac_plan` and `default_dc_plan` are set in config (set to `null` to disable)
@@ -66,7 +70,7 @@ Under Plans, you can configure as many or few plans as you want. A plan includes
   cpu_tdp:
     The tdp you want for the CPU expressed in mW, use `null` for default or numeric (45000 = 45W)
   boost:
-    Whether you want the CPU to boost above it's 3.0Ghz base clock speed, `true` or `false`
+    Whether you want the CPU to boost above it's 3.0Ghz base clock speed. 0 for no boost, 2 for aggressive boost, 4 for efficient aggressive boost (reccommended)
   dgpu_enabled:
     Whether you want the dedicated NVIDIA GPU enabled (uses more power, need for graphics/games), `true`, `false`
   screen_hz:
@@ -90,7 +94,7 @@ the default power plan will be selected 99% of the time, but will flip to the al
 
 Install the drivers inside the animatrix driver folder if needed
 
-run C:\G14control\G14Control.exe
+run G14control\G14Control.exe
 
 Optionally: create a task in task manager to have it start by itself
 ### Disclaimer
