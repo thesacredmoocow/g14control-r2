@@ -368,8 +368,8 @@ def apply_plan(plan):
 
 
 def quit_app():
-    global mc
-    if config["use_animatrix"]:
+    global mc, use_animatrix
+    if use_animatrix:
         mc.clearMatrix()
     icon_app.stop()  # This will destroy the the tray icon gracefully.
 
@@ -441,7 +441,7 @@ def play_snake():
     showFlash - prev_flash_state
 
 def create_menu():  # This will create the menu in the tray app
-    global dpp_GUID, app_GUID
+    global dpp_GUID, app_GUID, use_animatrix
     menu = pystray.Menu(
         pystray.MenuItem("Current Config", get_current, default=True),  # The default setting will make the action run on left click
         pystray.MenuItem("CPU Boost", pystray.Menu(  # The "Boost" submenu
@@ -469,9 +469,9 @@ def create_menu():  # This will create the menu in the tray app
         # I have no idea of what I am doing, fo real, man.
         *list(map((lambda plan: pystray.MenuItem(plan['name'], (lambda: (apply_plan(plan),deactivate_powerswitching())))), config['plans'])),  # Blame @dedo1911 for this. You can find him on github.
         pystray.Menu.SEPARATOR,
-        pystray.MenuItem("Enable AniMatrix", enable_animatrix, visible=config["use_animatrix"]),
-        pystray.MenuItem("Disable AniMatrix", disable_animatrix, visible=config["use_animatrix"]),
-        pystray.MenuItem("Play Snake", play_snake, visible=config["use_animatrix"]),
+        pystray.MenuItem("Enable AniMatrix", enable_animatrix, visible= use_animatrix),
+        pystray.MenuItem("Disable AniMatrix", disable_animatrix, visible= use_animatrix),
+        pystray.MenuItem("Play Snake", play_snake, visible= use_animatrix),
         pystray.Menu.SEPARATOR,
         pystray.MenuItem("Quit", quit_app)  # This to close the app, we will need it.
     )
@@ -546,8 +546,12 @@ if __name__ == "__main__":
     dpp_GUID = None
     app_GUID = None
     get_power_plans()
-    if(config['use_animatrix']):
+    use_animatrix = True
+    try:
         mc = MatrixController.MatrixController()
+    except:
+        use_animatrix = False
+    if(use_animatrix):
         inputMatrix = []
         for i in range(len(mc.rowWidths)):
             inputMatrix.append([0xff]*mc.rowWidths[i])
@@ -574,7 +578,7 @@ if __name__ == "__main__":
         resources.extract(config['temp_dir'])
         startup_checks()
         Thread(target=power_check, daemon=True).start()  # A process in the background will check for AC, autoswitch plan if enabled and detected
-        if(config['use_animatrix']):
+        if(use_animatrix):
             Thread(target=flash_animatrix, daemon=True).start()
         if(config['default_gaming_plan'] != None and config['default_gaming_plan_games'] != None):
             #print(config['default_gaming_plan'], config['default_gaming_plan_games'])
