@@ -12,6 +12,7 @@ It does combine all the option offered from other utilities into one, single, co
 
 #### What does it do?
 G14Control (you can even rename it) can control the current ASUS Power plan, Fan curve, Processor Boost Mode, Processor TDP, dGPU Activation and Screen refresh rate to your needs with a simple right click on the Windows taskbar. You can configure all the presets (and add new ones too) from the `config.yml` file.
+The app automatically detects if you've installed the animatrix drivers and will show the animatrix options if so.
 
 #### Does it work?
 Not yet fully. Upon turning off dGPU, the program updates windows power plan and forces a restart of the dGPU in device manager. Forcing a dGPU restart is only functional with the 2060MQ models currently.
@@ -23,6 +24,11 @@ Download the latest release zip from GitHub: https://github.com/thesacredmoocow/
 
 Extract it to some permanent location such as C:\Users\[username]\G14Control
 
+(Optional): if you have animatrix, install the certificate inside the animatrix driver folder
+    then go into device manager and open Human Interface devices and check through all of the USB Input Devices
+    You can check which one is the animatrix by going to properties->details->hardware ids. The animatrix has VID:0x0b05 and PID:0x193b
+    update the that driver with the one provided. If it works then the device should now show up under Universal Serial Bus devices as "aniMe Matrix"
+
 Edit the config.yml with text editor as needed (see configuring below)
 
 ### Configuring
@@ -30,8 +36,6 @@ All done in config.yaml within the root folder of the program. The program must 
 
 #### `default_power_plan` and `alt_power_plan` MUST BE SET IN ORDER FOR POWER PLAN SETTINGS TO WORK (BOOST, dGPU toggling)
 by default, the default power plan is "balanced" and the alt_power plan is "temp power plan". you need to set these to the names of your windows power plans, ie high performance, battery saver, etc. 
-
-`use_animatrix` enable only if you have animatrix and have installed the drivers included in this repository
 
 `app_name:` can be customized, this is what the hover text displays over the icon and the windows notification title
 
