@@ -126,9 +126,10 @@ You are very free to contribute with your code. I kinda suck at coding so any he
 - .... you tell us!
 - mode switching upon launching games
 ### Contributors:
-- https://github.com/FlyGoat/RyzenAdj
-- https://github.com/cronosun/atrofac
+- https://github.com/FlyGoat/RyzenAdj (adjusting tdp)
+- https://github.com/cronosun/atrofac (fan profiles)
 - https://github.com/dedo1911
-- https://github.com/carverhaines
-- https://tools.taubenkorb.at/change-screen-resolution/
-- https://github.com/felHR85/WinUsbPy
+- https://github.com/carverhaines (updated branch of original G14Control)
+- https://tools.taubenkorb.at/change-screen-resolution/ (change refresh rate)
+- https://github.com/felHR85/WinUsbPy (Animatrix lower level interface)
+- https://github.com/flukejones/rog-core (reverse engineered source code for AniMatrix protocol)
