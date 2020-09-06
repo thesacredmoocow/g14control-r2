@@ -549,6 +549,7 @@ if __name__ == "__main__":
     use_animatrix = True
     try:
         mc = MatrixController.MatrixController()
+        use_animatrix = mc.connected
     except:
         use_animatrix = False
     if(use_animatrix):
