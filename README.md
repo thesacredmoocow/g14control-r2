@@ -131,3 +131,4 @@ You are very free to contribute with your code. I kinda suck at coding so any he
 - https://github.com/dedo1911
 - https://github.com/carverhaines
 - https://tools.taubenkorb.at/change-screen-resolution/
+- https://github.com/felHR85/WinUsbPy
