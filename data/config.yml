@@ -1,5 +1,5 @@
 #boost modes: 0 = disabled, 2 = aggressive, 4 = efficient aggressive
-app_name: "G14 Control"  # Name of the app, you can customize that as you wish!
+app_name: "G14 Control r2"  # Name of the app, you can customize that as you wish!
 start_on_boot: true    # Set to True to enable starting on boot which adds a windows registry entry
 notification_time: 5  # How long notifications will stay on the screen
 check_power_every: 10  # Seconds in between checks to get the battery/ac status
