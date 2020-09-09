@@ -13,6 +13,7 @@ It does combine all the option offered from other utilities into one, single, co
 #### What does it do?
 G14Control (you can even rename it) can control the current ASUS Power plan, Fan curve, Processor Boost Mode, Processor TDP, dGPU Activation and Screen refresh rate to your needs with a simple right click on the Windows taskbar. You can configure all the presets (and add new ones too) from the `config.yml` file.
 The app automatically detects if you've installed the animatrix drivers and will show the animatrix options if so.
+It can also remap the ROG key if you so choose.
 
 #### Does it work?
 Not yet fully. Upon turning off dGPU, the program updates windows power plan and forces a restart of the dGPU in device manager. Forcing a dGPU restart is only functional with the 2060MQ models currently.
@@ -36,6 +37,9 @@ All done in config.yaml within the root folder of the program. The program must 
 
 #### `default_power_plan` and `alt_power_plan` MUST BE SET IN ORDER FOR POWER PLAN SETTINGS TO WORK (BOOST, dGPU toggling)
 by default, the default power plan is "balanced" and the alt_power plan is "temp power plan". you need to set these to the names of your windows power plans, ie high performance, battery saver, etc. 
+
+`rog_key:` the absolute location of an exe to be run when the ROG key is pressed. if set to "none" g14control won't do anything when the key is pressed.
+#### Note: by default, the original functionality of the ROG key will still activate, even if it is remapped in g14control. to prevent this, run stopROGkey.bat. To reset the ROG key to original functionality, run resetROGkey.bat
 
 `app_name:` can be customized, this is what the hover text displays over the icon and the windows notification title
 
