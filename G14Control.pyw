@@ -17,6 +17,7 @@ import MatrixController
 import math
 import random
 import copy
+import pywinusb.hid as hid
 
 class point:
     def __init__(self):
@@ -28,13 +29,17 @@ showFlash = False
 
 current_boost_mode = 0
 
-
 newDotDelay = 80
 threshold = 30
 newDotCounter = 60
 dotLength = 120
 dot = point()
 dots = []
+
+def readData(data):
+    if data[1] == 56:
+        os.startfile(config['rog_key'])
+    return None
 
 def getDist(a, b):
     return math.sqrt((a.y - b.y) * (a.y - b.y) + (a.x - b.x) * (a.x - b.x))
@@ -54,9 +59,14 @@ def get_power_plans():
         if i.find(config['alt_power_plan']) != -1:
             app_GUID = i.split(' ')[3]
 
-def set_power_plan(GUID):
-    #print("setting power plan GUID to: ", GUID)
+def set_power_plan(GUID, should_notify=False):
+    global dpp_GUID, app_GUID
     subprocess.check_output(["powercfg", "/s", GUID])
+    if should_notify:
+        if GUID == dpp_GUID:
+            notify("set power plan to " + config['default_power_plan'], config['notification_time'])
+        elif GUID == app_GUID:
+            notify("set power plan to " + config['alt_power_plan'], config['notification_time'])
 
 def get_app_path():
     global G14dir
@@ -105,34 +115,34 @@ def power_check():
                 if ac and current_plan != default_ac_plan:      # If on AC power, and not on the default_ac_plan, switch to that plan
                     for plan in config['plans']:
                         if plan['name'] == default_ac_plan:
+                            apply_plan(plan)
                             break
-                    apply_plan(plan)
                 if not ac and current_plan != default_dc_plan:      # If on DC power, and not on the default_dc_plan, switch to that plan
                     for plan in config['plans']:
                         if plan['name'] == default_dc_plan:
+                            apply_plan(plan)
                             break
-                    apply_plan(plan)
-            time.sleep(10)
+            time.sleep(config['check_power_every'])
     else:
         return
 
 
-def activate_powerswitching():
+def activate_powerswitching(should_notify=False):
     global auto_power_switch
     auto_power_switch = True
-    #time.sleep(10)   # Plan change notifies first, so this needs to be on a delay to prevent simultaneous notifications
-    #notify("Auto power switching has been ENABLED")
+    if should_notify:
+        notify("Auto power switching has been ENABLED", config['notification_time'])
 
 
-def deactivate_powerswitching():
+def deactivate_powerswitching(should_notify=False):
     global auto_power_switch
     auto_power_switch = False
-    #time.sleep(10)   # Plan change notifies first, so this needs to be on a delay to prevent simultaneous notifications
-    #notify("Auto power switching has been DISABLED")
+    if should_notify:
+        notify("Auto power switching has been DISABLED", config['notification_time'])
 
 
 def gaming_check():     # Checks if user specified games/programs are running, and switches to user defined plan, then switches back once closed
-    global  _plan, default_gaming_plan_games
+    global default_gaming_plan, default_gaming_plan_games
     previous_plan = None    # Define the previous plan to switch back to
 
     while True: # Continuously check every 10 seconds
@@ -148,36 +158,37 @@ def gaming_check():     # Checks if user specified games/programs are running, a
             previous_plan = current_plan
             for plan in config['plans']:
                 if plan['name'] == default_gaming_plan:
+                    apply_plan(plan)
                     break
-            apply_plan(plan)
-            notify(plan['name'])
+            notify(plan['name'] , config['notification_time'])
         if not game_running and previous_plan is not None and previous_plan != current_plan:    # If game is no longer running, and not on previous plan already (if set), then switch back to previous plan
             for plan in config['plans']:
                 if plan['name'] == previous_plan:
+                    apply_plan(plan)
                     break
-            apply_plan(plan)
-        time.sleep(10)      # Check for programs every 10 sec
+        time.sleep(config['check_power_every'])
 
 
-def notify(message):
-    Thread(target=do_notify, args=(message,), daemon=True).start()
+def notify(message, time):
+    nt = Thread(target=do_notify, args=(message, time), daemon=True)
+    nt.start()
 
-
-def do_notify(message):
+def do_notify(message, sleep_time):
     global icon_app
     icon_app.notify(message)  # Display the provided argument as message
-    time.sleep(config['notification_time'])  # The message is displayed for the configured time. This is blocking.
+    #time.sleep(config['notification_time'])  # The message is displayed for the configured time. This is blocking.
+    time.sleep(sleep_time)
     icon_app.remove_notification()  # Then, we will remove the notification
 
 #(["Disabled", "Enabled", "Aggressive", "Efficient Enabled", "Efficient Aggressive"][int(get_boost()[2:])])
 def get_current():
-    global ac, current_plan, current_boost_mode
+    global ac, current_plan, current_boost_mode, current_TDP
     notify(
         "Plan: " + current_plan + "     dGPU: " + (["Off", "On"][get_dgpu()]) + "\n" +
-        "Boost: " + (["Disabled", "Enabled", "Aggressive", "Efficient Enabled", "Efficient Aggressive"][int(get_boost()[2:])]) + "\n" +
+        "Boost: " + (["Disabled", "Enabled", "Aggressive", "Efficient Enabled", "Efficient Aggressive"][int(get_boost()[2:])]) + "      TDP: " + str(float(current_TDP)/1000) + "W" + "\n" +
         "Refresh Rate: " + (["60Hz", "120Hz"][get_screen()]) + "\n" +
-        "Power: " + (["Battery", "AC"][bool(ac)]) + "     Auto Switching: " + (["Off", "On"][auto_power_switch]) + "\n"
-        #"Boost mode: " + str(current_boost_mode) + "\n" (["Disabled", "Enabled", "Aggressive", "Efficient Enabled", "Efficient Aggressive"][int(current_boost_mode)])
+        "Power: " + (["Battery", "AC"][bool(ac)]) + "     Auto Switching: " + (["Off", "On"][auto_power_switch]) + "\n",
+        config['long_notification_time']
     )  # Let's print the current values
 
 
@@ -210,7 +221,7 @@ def set_boost(state, notification=True):
             "powercfg /setdcvalueindex " + pwr_guid + " 54533251-82be-4824-96c1-47b60b740d00 be337238-0d82-4146-a960-4f3749d470c7 4"
         )
         if notification is True:
-            notify("Boost ENABLED")  # Inform the user
+            notify("Boost ENABLED", config['notification_time'])  # Inform the user
     elif state is False:  # Deactivate boost
         os.popen(
             "powercfg /setacvalueindex " + pwr_guid + " 54533251-82be-4824-96c1-47b60b740d00 be337238-0d82-4146-a960-4f3749d470c7 0"
@@ -219,7 +230,7 @@ def set_boost(state, notification=True):
             "powercfg /setdcvalueindex " + pwr_guid + " 54533251-82be-4824-96c1-47b60b740d00 be337238-0d82-4146-a960-4f3749d470c7 0"
         )
         if notification is True:
-            notify("Boost DISABLED")  # Inform the user
+            notify("Boost DISABLED", config['notification_time'])  # Inform the user
     elif state == 0:
         os.popen(
             "powercfg /setacvalueindex " + pwr_guid + " 54533251-82be-4824-96c1-47b60b740d00 be337238-0d82-4146-a960-4f3749d470c7 0"
@@ -228,7 +239,7 @@ def set_boost(state, notification=True):
             "powercfg /setdcvalueindex " + pwr_guid + " 54533251-82be-4824-96c1-47b60b740d00 be337238-0d82-4146-a960-4f3749d470c7 0"
         )
         if notification is True:
-            notify("Boost DISABLED")  # Inform the user
+            notify("Boost DISABLED", config['notification_time'])  # Inform the user
     elif state == 4:
         os.popen(
             "powercfg /setacvalueindex " + pwr_guid + " 54533251-82be-4824-96c1-47b60b740d00 be337238-0d82-4146-a960-4f3749d470c7 4"
@@ -237,7 +248,7 @@ def set_boost(state, notification=True):
             "powercfg /setdcvalueindex " + pwr_guid + " 54533251-82be-4824-96c1-47b60b740d00 be337238-0d82-4146-a960-4f3749d470c7 4"
         )
         if notification is True:
-            notify("Boost set to Efficient Aggressive")  # Inform the user
+            notify("Boost set to Efficient Aggressive", config['notification_time'])  # Inform the user
     elif state == 2:
         os.popen(
             "powercfg /setacvalueindex " + pwr_guid + " 54533251-82be-4824-96c1-47b60b740d00 be337238-0d82-4146-a960-4f3749d470c7 2"
@@ -246,7 +257,7 @@ def set_boost(state, notification=True):
             "powercfg /setdcvalueindex " + pwr_guid + " 54533251-82be-4824-96c1-47b60b740d00 be337238-0d82-4146-a960-4f3749d470c7 2"
         )
         if notification is True:
-            notify("Boost set to Aggressive")  # Inform the user
+            notify("Boost set to Aggressive", config['notification_time'])  # Inform the user
     set_power_plan(app_GUID)
     time.sleep(0.25)
     set_power_plan(dpp_GUID)
@@ -275,7 +286,7 @@ def set_dgpu(state, notification=True):
             "powercfg /setdcvalueindex " + pwr_guid + " e276e160-7cb0-43c6-b20b-73f5dce39954 a1662ab2-9d34-4e53-ba8b-2639b9e20857 2"
         )
         if notification is True:
-            notify("dGPU ENABLED")  # Inform the user
+            notify("dGPU ENABLED", config['notification_time'])  # Inform the user
     elif state is False:  # Deactivate dGPU
         os.popen(
             "powercfg /setacvalueindex " + pwr_guid + " e276e160-7cb0-43c6-b20b-73f5dce39954 a1662ab2-9d34-4e53-ba8b-2639b9e20857 0"
@@ -285,7 +296,7 @@ def set_dgpu(state, notification=True):
         )
         os.system("\"" + G14dir+"\\restartGPUcmd.bat" + "\"")
         if notification is True:
-            notify("dGPU DISABLED")  # Inform the user
+            notify("dGPU DISABLED", config['notification_time'])  # Inform the user
 
 
 
@@ -320,7 +331,7 @@ def set_screen(refresh, notification=True):
             checkscreenref + " /d=0 /f=" + str(refresh)
         )
         if notification is True:
-            notify("Screen refresh rate set to: " + str(refresh) + "Hz")
+            notify("Screen refresh rate set to: " + str(refresh) + "Hz", config['notification_time'])
     else:
         return
 
@@ -345,14 +356,18 @@ def set_atrofac(asus_plan, cpu_curve=None, gpu_curve=None):
         )
 
 
-def set_ryzenadj(tdp):
+def set_ryzenadj(tdp, notification=False):
+    global current_TDP
     ryzenadj = str(os.path.join(config['temp_dir'] + "ryzenadj.exe"))
     if tdp is None:
         pass
     else:
+        current_TDP = tdp
         os.popen(
             ryzenadj + " -a " + str(tdp) + " -b " + str(tdp)
         )
+        if(notification):
+            notify("setting TDP to " + str(float(tdp)/1000) + "W", config['notification_time'])
 
 
 def apply_plan(plan):
@@ -363,15 +378,20 @@ def apply_plan(plan):
     set_dgpu(plan['dgpu_enabled'], False)
     set_screen(plan['screen_hz'], False)
     set_ryzenadj(plan['cpu_tdp'])
-    notify("Applied plan " + plan['name'])
-    
+    notify("Applied plan " + plan['name'], config['notification_time'])
 
 
 def quit_app():
-    global mc, use_animatrix
+    global mc, use_animatrix, device
     if use_animatrix:
         mc.clearMatrix()
     icon_app.stop()  # This will destroy the the tray icon gracefully.
+    print(device)
+    device.close()
+    try:
+        sys.exit()
+    except:
+        print('System Exit')
 
 def flash_animatrix():
     global showFlash
@@ -424,12 +444,12 @@ def flash_animatrix():
 
 def enable_animatrix():
     global showFlash
-    notify("Animatrix Enabled")
+    notify("Animatrix Enabled", config['notification_time'])
     showFlash = True
 
 def disable_animatrix():
     global showFlash
-    notify("Animatrix Disabled")
+    notify("Animatrix Disabled", config['notification_time'])
     showFlash = False
 
 def play_snake():
@@ -457,6 +477,13 @@ def create_menu():  # This will create the menu in the tray app
             pystray.MenuItem("120Hz", lambda: set_screen(120)),
             pystray.MenuItem("60Hz", lambda: set_screen(60)),
         ), visible=check_screen()),
+        pystray.MenuItem("CPU TDP", pystray.Menu(
+            pystray.MenuItem("15 watts", lambda: set_ryzenadj(15000, True)),
+            pystray.MenuItem("25 watts", lambda: set_ryzenadj(25000, True)),
+            pystray.MenuItem("35 watts", lambda: set_ryzenadj(35000, True)),
+            pystray.MenuItem("45 watts", lambda: set_ryzenadj(45000, True)),
+            pystray.MenuItem("55 watts", lambda: set_ryzenadj(55000, True)),
+        )),
         pystray.Menu.SEPARATOR,
         pystray.MenuItem("Windows Power Plan", pystray.Menu(
             pystray.MenuItem(config['default_power_plan'], lambda: set_power_plan(dpp_GUID)),
@@ -511,6 +538,7 @@ def registry_add():     # Adds G14Control.exe to the windows registry to start o
     G14fileloc = os.path.join(G14dir,G14exe)
     G14Key = winreg.OpenKey(winreg.HKEY_CURRENT_USER, registry_key_loc, 0, winreg.KEY_SET_VALUE)
     winreg.SetValueEx(G14Key, "G14Control", 1, winreg.REG_SZ, G14fileloc)
+    winreg.CloseKey(winreg.HKEY_LOCAL_MACHINE)
 
 
 def registry_remove():     # Removes G14Control.exe from the windows registry
@@ -519,10 +547,30 @@ def registry_remove():     # Removes G14Control.exe from the windows registry
     G14fileloc = os.path.join(G14dir,G14exe)
     G14Key = winreg.OpenKey(winreg.HKEY_CURRENT_USER, registry_key_loc, 0, winreg.KEY_ALL_ACCESS)
     winreg.DeleteValue(G14Key,'G14Control')
+    winreg.CloseKey(winreg.HKEY_LOCAL_MACHINE)
+"""
+def get_max_charge():
+    global max_charge_key_loc, dpp_GUID, app_GUID
+    maxChargeKey = winreg.OpenKey(winreg.HKEY_LOCAL_MACHINE, max_charge_key_loc, 0, winreg.KEY_ALL_ACCESS)
+    currMaxVal = winreg.QueryValueEx(maxChargeKey, "ChargingRate")[0]
+    winreg.CloseKey(winreg.HKEY_LOCAL_MACHINE)
+    return currMaxVal
 
-
-
-
+def set_max_charge(maxval):
+    global max_charge_key_loc
+    try:
+        if maxval < 20 or maxval > 100:
+            return False
+    except:
+        return False
+    
+    maxChargeKey = winreg.OpenKey(winreg.HKEY_LOCAL_MACHINE, max_charge_key_loc, 0, winreg.KEY_ALL_ACCESS)
+    winreg.SetValueEx(maxChargeKey, "ChargingRate", 1, winreg.REG_DWORD, maxval)
+    set_power_plan(app_GUID)
+    time.sleep(0.25)
+    set_power_plan(dpp_GUID)
+    return True
+"""
 
 def startup_checks():
     global default_ac_plan, auto_power_switch
@@ -539,6 +587,7 @@ def startup_checks():
 
 
 if __name__ == "__main__":
+    #
     frame = []
     G14dir = None
     get_app_path()
@@ -547,6 +596,7 @@ if __name__ == "__main__":
     app_GUID = None
     get_power_plans()
     use_animatrix = True
+    current_TDP = 0
     try:
         mc = MatrixController.MatrixController()
         use_animatrix = mc.connected
@@ -568,22 +618,39 @@ if __name__ == "__main__":
                 temp.append(copy.deepcopy(t))
             frame.append(copy.deepcopy(temp))
     if is_admin() or config['debug']:  # If running as admin or in debug mode, launch program
-        #global dpp_GUID, app_GUID
-        #print("dpp_GUID: ", dpp_GUID)
         current_plan = config['default_starting_plan']
         default_ac_plan = config['default_ac_plan']
         default_dc_plan = config['default_dc_plan']
+        
+        for plan in config['plans']:
+                if plan['name'] == current_plan:
+                    current_TDP = plan['cpu_tdp']
+                    break
         registry_key_loc = r'Software\Microsoft\Windows\CurrentVersion\Run'
+        #max_charge_key_loc = r'SOFTWARE\WOW6432Node\ASUS\ASUS Battery Health Charging'
         auto_power_switch = False   # Set variable before startup_checks decides what the value should be
         ac = psutil.sensors_battery().power_plugged  # Set AC/battery status on start
         resources.extract(config['temp_dir'])
         startup_checks()
-        Thread(target=power_check, daemon=True).start()  # A process in the background will check for AC, autoswitch plan if enabled and detected
+        
+        power_thread = Thread(target=power_check, daemon=True)
+        power_thread.start()
+        if config['default_gaming_plan'] is not None and config['default_gaming_plan_games'] is not None:
+            gaming_thread = Thread(target=gaming_check, daemon=True)
+            gaming_thread.start()
         if(use_animatrix):
-            Thread(target=flash_animatrix, daemon=True).start()
-        if(config['default_gaming_plan'] != None and config['default_gaming_plan_games'] != None):
-            #print(config['default_gaming_plan'], config['default_gaming_plan_games'])
-            Thread(target=gaming_check, daemon=True).start()
+            animatrix_thread = Thread(target=flash_animatrix, daemon=True)
+            animatrix_thread.start()
+
+        if config['rog_key'] != None:
+            filter = hid.HidDeviceFilter(vendor_id = 0x0b05, product_id = 0x1866)
+            hid_device = filter.get_devices()
+            for i in hid_device:
+                if str(i).find("col01"):
+                    device = i
+                    device.open()
+                    device.set_raw_data_handler(readData)
+
         default_gaming_plan = config['default_gaming_plan']
         default_gaming_plan_games = config['default_gaming_plan_games']
         icon_app = pystray.Icon(config['app_name'])  # Initialize the icon app and set its name
