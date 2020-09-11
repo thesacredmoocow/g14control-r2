@@ -21,6 +21,8 @@ Not yet fully. Upon turning off dGPU, the program updates windows power plan and
 #### What about Linux?
 While is possible to port this app to Linux, at the moment is engineered to work only on Windows.
 ### Installation
+
+Download and install Visual C++ Redistributable Packages: https://www.microsoft.com/en-us/download/details.aspx?id=40784
 Download the latest release zip from GitHub: https://github.com/thesacredmoocow/g14control-r2/releases
 
 Extract it to some permanent location such as C:\Users\[username]\G14Control
