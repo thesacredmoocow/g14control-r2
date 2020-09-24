@@ -165,44 +165,6 @@ class Weather(Animatrix):
         matrix.append([0] * 9)
         return matrix
 
-    # def run(self):
-    #     global animatrix_thread_running
-    #     lastWeatherUpdate = datetime.fromtimestamp(0)
-    #     frame_refresh_millis = 100
-    #
-    #     # DEFAULT CONFIG
-    #     weather_config = {'sunrise': datetime(1970, 1, 1, 6, 0, 0), 'sunset': datetime(1970, 1, 1, 18, 0, 0),
-    #                       'cloudiness_percent': 0.0, 'rain_1h_mm': 0.0, 'snow_1h_mm': 0.0, 'wind_speed_mps': 0.0}
-    #
-    #     while animatrix_thread_running:
-    #         currentTime = datetime.now()
-    #         if lastWeatherUpdate + timedelta(hours=1) < currentTime:
-    #             try:
-    #                 response = requests.get(
-    #                     "https://api.openweathermap.org/data/2.5/weather?q=%s&APPID=%s" % (
-    #                         self.location_string, self.openweathermap_token))
-    #                 loads = json.loads(response.content)
-    #                 weather_config = {
-    #                     "sunrise": datetime.fromtimestamp(
-    #                         loads.get("sys").get("sunrise",
-    #                                              currentTime.replace(hour=6, minute=0, second=0, microsecond=0))),
-    #                     "sunset": datetime.fromtimestamp(
-    #                         loads.get("sys").get("sunset",
-    #                                              currentTime.replace(hour=18, minute=0, second=0, microsecond=0))),
-    #                     "cloudiness_percent": loads.get("clouds", {}).get("all", 0),
-    #                     "rain_1h_mm": loads.get("rain", {}).get("1h", 0),
-    #                     "snow_1h_mm": loads.get("snow", {}).get("1h", 0),
-    #                     "wind_speed_mps": loads.get("wind", {}).get("speed", 0),
-    #                 }
-    #             finally:
-    #                 lastWeatherUpdate = currentTime
-    #             print("Updated Weather:")
-    #             print(weather_config)
-    #
-    #         self.drawFrame(weather_config)
-    #         render_time_millis = ((datetime.now() - currentTime).microseconds / 1000)
-    #         time.sleep(max((frame_refresh_millis - render_time_millis) / 1000, 0))
-
     def updateFrame(self):
         # DEFAULT CONFIG
         weather_config = {'sunrise': datetime(1970, 1, 1, 6, 0, 0), 'sunset': datetime(1970, 1, 1, 18, 0, 0),
