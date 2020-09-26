@@ -41,39 +41,39 @@ class MatrixObject():
 
 class Cloud(MatrixObject):
     large_cloud = [
-        [0, 0, 0, 9, 9, 9, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-        [0, 0, 0, 9, 9, 9, 9, 0, 0, 0, 0, 0, 0, 0, 0],
-        [0, 0, 9, 1, 1, 1, 9, 0, 0, 0, 0, 0, 0, 0, 0],
-        [0, 0, 9, 1, 1, 1, 1, 9, 9, 0, 0, 9, 9, 0, 0],
-        [0, 9, 9, 1, 1, 1, 1, 9, 9, 0, 9, 9, 9, 0, 0],
-        [0, 9, 1, 9, 9, 9, 9, 1, 9, 9, 9, 1, 9, 9, 0],
-        [9, 1, 1, 9, 1, 9, 1, 1, 9, 9, 1, 1, 1, 9, 0],
-        [9, 1, 1, 1, 1, 1, 1, 1, 1, 9, 1, 1, 1, 1, 9],
-        [9, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 9],
-        [9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9],
+        [0, 0, 0, 0, 9, 9, 9, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+        [0, 0, 0, 9, 9, 9, 9, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+        [0, 0, 0, 9, 1, 1, 1, 9, 0, 0, 0, 0, 0, 0, 0, 0],
+        [0, 0, 9, 1, 1, 1, 1, 9, 9, 0, 0, 9, 9, 0, 0, 0],
+        [0, 0, 9, 9, 1, 1, 1, 1, 9, 9, 0, 9, 9, 9, 0, 0],
+        [0, 9, 1, 9, 9, 9, 9, 1, 9, 9, 9, 1, 9, 9, 0, 0],
+        [0, 9, 1, 1, 9, 1, 9, 1, 1, 9, 9, 1, 1, 1, 9, 0],
+        [9, 1, 1, 1, 1, 1, 1, 1, 1, 9, 1, 1, 1, 1, 9, 0],
+        [2, 9, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 9],
+        [9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 2],
     ]
 
     medium_cloud = [
-        [0, 0, 0, 9, 9, 9, 0, 0, 0],
-        [0, 0, 0, 9, 9, 9, 9, 0, 0],
-        [0, 0, 9, 9, 1, 1, 9, 0, 0],
-        [0, 0, 9, 1, 1, 1, 9, 0, 0],
-        [0, 9, 9, 1, 1, 1, 9, 0, 0],
-        [0, 9, 1, 9, 9, 1, 9, 9, 0],
-        [0, 9, 1, 1, 9, 1, 9, 9, 0],
-        [9, 9, 1, 1, 1, 1, 1, 1, 9],
-        [9, 1, 1, 1, 1, 1, 1, 1, 9],
-        [9, 9, 9, 9, 9, 9, 9, 9, 9],
+        [0, 0, 0, 0, 9, 9, 9, 0, 0, 0],
+        [0, 0, 0, 9, 9, 9, 9, 0, 0, 0],
+        [0, 0, 0, 9, 9, 1, 1, 9, 0, 0],
+        [0, 0, 9, 1, 1, 1, 9, 0, 0, 0],
+        [0, 0, 9, 9, 1, 1, 1, 9, 0, 0],
+        [0, 9, 1, 9, 9, 1, 9, 9, 0, 0],
+        [0, 2, 9, 1, 1, 9, 1, 9, 9, 0],
+        [9, 9, 1, 1, 1, 1, 1, 1, 9, 0],
+        [0, 9, 1, 1, 1, 1, 1, 1, 1, 9],
+        [9, 9, 9, 9, 9, 9, 9, 9, 9, 2],
     ]
 
     small_cloud = [
         [0, 0, 0, 0, 0],
         [0, 9, 9, 0, 0],
-        [9, 9, 9, 0, 0],
+        [0, 9, 9, 9, 0],
         [9, 1, 1, 9, 0],
-        [9, 1, 1, 1, 0],
+        [0, 9, 1, 1, 1],
         [9, 1, 1, 9, 0],
-        [0, 1, 1, 9, 0],
+        [9, 0, 1, 1, 9],
         [9, 9, 9, 9, 9],
     ]
 
@@ -98,7 +98,7 @@ class Cloud(MatrixObject):
         return self.data
 
     def moveFrame(self, weather_config):
-        self.xVelocity = weather_config.get("wind_speed_mps", 0) / 10
+        self.xVelocity = weather_config.get("wind_speed_mps", 0) / 50
         for drop in self.rain_drops:
             if drop.outOfBounds():
                 self.rain_drops.remove(drop)
@@ -143,21 +143,19 @@ class Cloud(MatrixObject):
             allowed_sizes = 2
         else:
             allowed_sizes = 3
-        if xPos and xVelocity:
+        if xPos is not None and xVelocity is not None:
             return Cloud(allowed_sizes=allowed_sizes, xPos=xPos, xVelocity=xVelocity)
         return Cloud(allowed_sizes=allowed_sizes)
 
 
 class Raindrop(MatrixObject):
-    data = [
-        [9]
-    ]
+    data = [[9]]
 
     def getData(self):
         return self.data
 
     def moveFrame(self, weather_config):
-        self.xVelocity = weather_config.get("wind_speed_mps", 0) / 10
+        self.xVelocity = weather_config.get("wind_speed_mps", 0) / 50
         super().moveFrame(weather_config)
 
     @staticmethod
@@ -165,21 +163,22 @@ class Raindrop(MatrixObject):
         return Raindrop(yVelocity=yVelocity, xVelocity=xVelocity, xPos=xPos, yPos=yPos, yStep=yStep)
 
 
-class WindDebris(MatrixObject):
-    data = [
-        [1]
-    ]
+class Snowflake(Raindrop):
+
+    @staticmethod
+    def generate(xVelocity=0.0, yVelocity=2.0, xPos=0.0, yPos=0.0, yStep=1):
+        return Snowflake(yVelocity=yVelocity, xVelocity=xVelocity, xPos=xPos, yPos=yPos, yStep=yStep)
+
+
+class WindDebris(Raindrop):
+    data = [[1]]
 
     def getData(self):
         return self.data
 
-    def moveFrame(self, weather_config):
-        self.xVelocity = weather_config.get("wind_speed_mps", 0)
-        super().moveFrame(weather_config)
-
     @staticmethod
-    def generate(xVelocity=0.0, yVelocity=0.1, xPos=0.0, yPos=random.randrange(33, 43), yStep=1):
-        return Raindrop(yVelocity=yVelocity, xVelocity=xVelocity, xPos=xPos, yPos=yPos, yStep=yStep)
+    def generate(xVelocity=0.0, xPos=0.0, yPos=random.randrange(30, 60), **kwargs):
+        return WindDebris(yVelocity=0.01, xVelocity=xVelocity, xPos=xPos, yPos=yPos)
 
 
 class Sun(MatrixObject):
@@ -197,25 +196,38 @@ class Sun(MatrixObject):
         [0, 0, 0, 0, 9, 9, 9, 9, 0, 0, 0, 0],
     ]
 
-    def getData(self):
-        return self.data if self.isActive() else []
+    default_sunrise = datetime(1970, 1, 1, 6, 0, 0)
+    default_sunset = datetime(1970, 1, 1, 18, 0, 0)
 
-    def isActive(self):
-        currentMinuteOfDay = (datetime.now().hour * 60) + datetime.now().minute
-        return 6 * 60 < currentMinuteOfDay < 19 * 60
+    isSunActive = False
+
+    def getCurrentMinuteOfDay(self):
+        return (datetime.now().hour * 60) + datetime.now().minute
+
+    def getData(self):
+        return self.data if self.isSunActive else []
+
+    def isActive(self, sunrise, sunset):
+        return (sunrise.hour * 60 + sunrise.minute) \
+               < self.getCurrentMinuteOfDay() < \
+               (sunset.hour * 60 + sunset.minute)
 
     def moveFrame(self, weather_config):
+        sunrise = weather_config.get("sunrise", self.default_sunrise)
+        sunset = weather_config.get("sunset", self.default_sunrise)
+        sunlightDuration = (sunset - sunrise)
+        sunlightDurationInMinutes = sunlightDuration.seconds / 60
         # move it between 6am and 6pm
         # currentHour = 11
-        currentMinuteOfDay = (datetime.now().hour * 60) + datetime.now().minute
-        if self.isActive():  # between 6am and 6pm
+        self.isSunActive = self.isActive(sunrise, sunset)
+        if self.isSunActive:  # between 6am and 6pm
             # 6am = 14 - len(self.data[0])
             # 6pm = 47 + len(self.data[0])
-            minX = 14 - len(self.data[0])
+            minX = 14 - (len(self.data[0]) / 2)
             maxX = 47
-            currentStep = currentMinuteOfDay - (6 * 60)  # 0 to 12 if after 6am
-            stepIncrement = (maxX - minX) / (13 * 60)  # 13 hour block
-            self.xPos = minX + (stepIncrement * currentStep)
+            currentStep = self.getCurrentMinuteOfDay() - (sunrise.hour * 60 + sunrise.minute)  # 0 to 12 if after 6am
+            stepIncrement = (maxX - minX) / sunlightDurationInMinutes  # 13 hour block
+            self.xPos = max(minX + (stepIncrement * currentStep), 0)
 
     @staticmethod
     def generate():
@@ -237,25 +249,38 @@ class Moon(MatrixObject):
         [2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 9, 0, 0, 0],
     ]
 
-    def getData(self):
-        return self.data if self.isActive() else []
+    default_sunrise = datetime(1970, 1, 1, 6, 0, 0)
+    default_sunset = datetime(1970, 1, 1, 18, 0, 0)
 
-    def isActive(self):
-        currentMinuteOfDay = (datetime.now().hour * 60) + datetime.now().minute
-        return 18 * 60 < currentMinuteOfDay or currentMinuteOfDay < 6 * 60
+    isMoonActive = False
+
+    def getData(self):
+        return self.data if self.isMoonActive else []
+
+    def getCurrentMinuteOfDay(self):
+        return (datetime.now().hour * 60) + datetime.now().minute
+
+    def isActive(self, sunrise, sunset):
+        return (sunset.hour * 60 + sunset.minute) < self.getCurrentMinuteOfDay() \
+               or self.getCurrentMinuteOfDay() < (sunrise.hour * 60 + sunrise.minute)
 
     def moveFrame(self, weather_config):
-        currentMinuteOfDay = (datetime.now().hour * 60) + datetime.now().minute
-        # currentMinuteOfDay = (22 * 60) + datetime.now().minute
-        if self.isActive():
-            minX = 14 - len(self.data[0])
+        sunrise = weather_config.get("sunrise", self.default_sunrise)
+        sunset = weather_config.get("sunset", self.default_sunrise)
+        sunlightDuration = (sunset - sunrise)
+        sunlightDurationInMinutes = sunlightDuration.seconds / 60
+        self.isMoonActive = self.isActive(sunrise, sunset)
+        if self.isMoonActive:
+            minX = 14 - self.data[0]
             maxX = 47
-            if 18 * 60 < currentMinuteOfDay:
-                currentStep = currentMinuteOfDay - (17 * 60)  # start of night (1700 - 2359)
+            sunsetMinutes = ((sunset.hour * 60) + sunset.minute)
+            if sunsetMinutes < self.getCurrentMinuteOfDay():
+                currentStep = self.getCurrentMinuteOfDay() - sunsetMinutes  # start of night (1700 - 2359)
             else:
-                currentStep = currentMinuteOfDay + (5 * 60)  # end of night (0000 - 0600)
-            stepIncrement = (maxX - minX) / (12 * 60)  # 14 hour block
-            self.xPos = minX + (stepIncrement * currentStep)
+                currentStep = self.getCurrentMinuteOfDay() + (
+                        (sunrise.hour * 60) + sunrise.minute)  # end of night (0000 - 0600)
+            stepIncrement = (maxX - minX) / sunlightDurationInMinutes  # 13 hour block
+            self.xPos = max(minX + (stepIncrement * currentStep), 0)
 
     @staticmethod
     def generate():
@@ -265,6 +290,8 @@ class Moon(MatrixObject):
 class CloudHaze(MatrixObject):
     data = []
     rain_drops = []
+    snowflakes = []
+    wind_debris = []
     lastHaze = -1
 
     def __init__(self, xPos=14.0, yPos=33.0, zPos=0.0, xVelocity=0.0, yVelocity=0.0, yStep=1, feathering=0,
@@ -292,41 +319,73 @@ class CloudHaze(MatrixObject):
         return self.data
 
     def getChildren(self):
-        return self.rain_drops
+        return self.rain_drops + self.snowflakes + self.wind_debris
 
     def moveFrame(self, weather_config):
         newHaze = weather_config.get("cloudiness_percent", 0)
+
         if newHaze != self.lastHaze:
             self.lastHaze = newHaze
-            if newHaze < 50:
+            if newHaze < 33:
                 self.data = []
-            elif newHaze < 75:
+            elif newHaze < 66:
                 self.updateData(1)
             else:
                 self.updateData(2)
+
         for drop in self.rain_drops:
             if drop.outOfBounds():
                 self.rain_drops.remove(drop)
         while self.shouldAddRaindrop(weather_config):
-            if weather_config.get("snow_1h_mm", 0) > weather_config.get("rain_1h_mm", 0):
-                self.add_particle(yVelocity=random.randrange(1, 5, 1) / 10, yStep=1)  # snowing
-            else:
-                self.add_particle(yVelocity=2.0, yStep=2)  # raining
+            self.add_particle(particle_type="rain")  # raining
+
+        for snowflake in self.snowflakes:
+            if snowflake.outOfBounds():
+                self.snowflakes.remove(snowflake)
+        while self.shouldAddSnowflake(weather_config):
+            self.add_particle(particle_type="snow")  # snowing
+
+        for debris in self.wind_debris:
+            if debris.outOfBounds():
+                self.wind_debris.remove(debris)
+        while self.shouldAddWindDebris(weather_config):
+            self.add_particle(particle_type="debris")  # nothing
         return  # do nothing
 
-    def shouldAddRaindrop(self, weather_config):
-        rain_intensity = max(weather_config.get("rain_1h_mm"), weather_config.get("snow_1h_mm", 0))
-        if rain_intensity == 0 or len(self.data) == 0:
+    def shouldAddSnowflake(self, weather_config):
+        snow_intensity = weather_config.get("snow_1h_mm", 0)
+        if snow_intensity == 0:
             return False
+        snowflakesInRange = [snowflake.yPos for snowflake in self.snowflakes if
+                             snowflake.yPos < (self.yPos + len(self.data) + 4)]
+        snowflakesBelowDensity = len(snowflakesInRange) < snow_intensity
+        return snowflakesBelowDensity
+
+    def shouldAddWindDebris(self, weather_config):
+        if weather_config.get("snow_1h_mm", 0) > 0 \
+                or weather_config.get("rain_1h_mm", 0) > 0:
+            return False
+        debrisInRange = [debris.xPos for debris in self.wind_debris if debris.xPos < (self.xPos + 20)]
+        debrisBelowIntensity = len(debrisInRange) < 3
+        return debrisBelowIntensity
+
+    def shouldAddRaindrop(self, weather_config):
+        rain_intensity = weather_config.get("rain_1h_mm", 0)
         rainDropsInRange = [drop.yPos for drop in self.rain_drops if drop.yPos < (self.yPos + len(self.data) + 4)]
         rainDropsBelowDensity = len(rainDropsInRange) < rain_intensity
         return rainDropsBelowDensity
 
-    def add_particle(self, yVelocity=2.0, yStep=2, xVelocity=0.0):
-        rainX = random.randrange(10, 50)
-        rainY = self.yPos + len(self.data) - 1
-        self.rain_drops.append(
-            Raindrop.generate(yPos=rainY, xPos=rainX, xVelocity=xVelocity, yStep=yStep, yVelocity=yVelocity))
+    def add_particle(self, particle_type="rain"):
+        xPos = random.randrange(10, 50)
+        yPos = self.yPos + len(self.data) - 1
+        if particle_type == "debris":
+            self.wind_debris.append(WindDebris.generate())
+        elif particle_type == "snow":
+            self.snowflakes.append(Snowflake.generate(yPos=yPos, xPos=xPos, xVelocity=0.0, yStep=1,
+                                                      yVelocity=random.randrange(1, 5, 1) / 10))
+        else:
+            self.rain_drops.append(Raindrop.generate(yPos=yPos, xPos=xPos, xVelocity=0.0,
+                                                     yVelocity=random.randrange(10, 20, 1) / 10))
 
     @staticmethod
     def generate(intensity=0):
@@ -625,32 +684,3 @@ class Number(MatrixObject):
     @staticmethod
     def generate(xPos=30.0, yPos=60.0, numValue=0):
         return Number(xPos=xPos, yPos=yPos, numValue=numValue)
-
-
-class Test(MatrixObject):
-    data = [
-        [0, 0, 9, 0, 0],
-        [0, 0, 9, 0, 0],
-        [9, 9, 9, 9, 9],
-        [0, 0, 9, 0, 0],
-        [0, 0, 9, 0, 0],
-    ]
-
-    def getData(self):
-        remapped = []
-        should_shift = self.yPos % 2 == 0
-        for row in self.data:
-            if should_shift:
-                remapped.append([0] + row)
-            else:
-                remapped.append(row)
-            should_shift = not should_shift
-        return remapped
-        # return self.data
-
-    def moveFrame(self, weather_config):
-        super().moveFrame(weather_config)
-
-    @staticmethod
-    def generate():
-        return Test(xPos=30, yPos=34, yVelocity=0)

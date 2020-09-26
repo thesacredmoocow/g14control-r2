@@ -14,16 +14,12 @@ from g14_animatrix.matrix_object import *
 class Weather(Animatrix):
     matrixObjects = {}
 
-    # cloud_density = 4
-    # rain_intensity = 100
-
     def __init__(self, matrix_controller, location_string, openweathermap_token,
                  mountains=True,
                  clock=True,
                  is12HourTime=True,
                  day_night_cycle=True
                  ):
-        # self.matrixObjects["test"] = [Test.generate()]
         super().__init__(matrix_controller)
         self.lastWeatherUpdate = datetime.fromtimestamp(0)
         self.location_string = location_string
@@ -33,18 +29,16 @@ class Weather(Animatrix):
         if day_night_cycle:
             self.matrixObjects["sun"] = [Sun.generate()]
             self.matrixObjects["moon"] = [Moon.generate()]
-        self.matrixObjects["haze"] = [CloudHaze.generate()]
         if mountains:
             self.matrixObjects["mountains"] = [Mountains.generate()]
-        self.matrixObjects["wind_debris"] = []
-        self.matrixObjects["clouds"] = [
-            # Cloud.generate(xPos=20, xVelocity=0),
-        ]
+
+        self.matrixObjects["haze"] = [CloudHaze.generate()]
+        self.matrixObjects["clouds"] = []
 
     def drawFrame(self, weather_config):
         frameMatrix = self.fullMatrix()
         if self.shouldAddCloud(weather_config):
-            self.matrixObjects["clouds"].append(Cloud.generate(weather_config))
+            self.matrixObjects["clouds"].append(Cloud.generate(weather_config=weather_config))
         for objectCategory in self.matrixObjects:
             for matrixObject in self.matrixObjects[objectCategory]:
                 if matrixObject.outOfBounds():
@@ -113,56 +107,9 @@ class Weather(Animatrix):
         matrix.append([0] * 33)
         matrix.append([0] * 33)
         matrix.append([0] * 33)
-        matrix.append([0] * 33)
-        matrix.append([0] * 33)
-        matrix.append([0] * 32)
-        matrix.append([0] * 32)
-        matrix.append([0] * 31)
-        matrix.append([0] * 31)
-        matrix.append([0] * 30)
-        matrix.append([0] * 30)
-        matrix.append([0] * 29)
-        matrix.append([0] * 29)
-        matrix.append([0] * 28)
-        matrix.append([0] * 28)
-        matrix.append([0] * 27)
-        matrix.append([0] * 27)
-        matrix.append([0] * 26)
-        matrix.append([0] * 26)
-        matrix.append([0] * 25)
-        matrix.append([0] * 25)
-        matrix.append([0] * 24)
-        matrix.append([0] * 24)
-        matrix.append([0] * 23)
-        matrix.append([0] * 23)
-        matrix.append([0] * 22)
-        matrix.append([0] * 22)
-        matrix.append([0] * 21)
-        matrix.append([0] * 21)
-        matrix.append([0] * 20)
-        matrix.append([0] * 20)
-        matrix.append([0] * 19)
-        matrix.append([0] * 19)
-        matrix.append([0] * 18)
-        matrix.append([0] * 18)
-        matrix.append([0] * 17)
-        matrix.append([0] * 17)
-        matrix.append([0] * 16)
-        matrix.append([0] * 16)
-        matrix.append([0] * 15)
-        matrix.append([0] * 15)
-        matrix.append([0] * 14)
-        matrix.append([0] * 14)
-        matrix.append([0] * 13)
-        matrix.append([0] * 13)
-        matrix.append([0] * 12)
-        matrix.append([0] * 12)
-        matrix.append([0] * 11)
-        matrix.append([0] * 11)
-        matrix.append([0] * 10)
-        matrix.append([0] * 10)
-        matrix.append([0] * 9)
-        matrix.append([0] * 9)
+        for i in range(0, 24, 2):
+            matrix.append([0] * (33-i))
+            matrix.append([0] * (33-i))
         return matrix
 
     def updateFrame(self):

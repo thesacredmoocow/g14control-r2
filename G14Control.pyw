@@ -10,7 +10,6 @@ import MatrixController
 import pywinusb.hid as hid
 from g14_animatrix.flash_matrix import Flash
 from g14_animatrix.weather_matrix import Weather
-from g14_animatrix.ani_frame import point
 from g14_system.atrofac import set_atrofac
 from g14_system.boost import get_boost, set_boost
 from g14_system.config import Config, UserSettings
@@ -19,19 +18,10 @@ from g14_system.ryzenadj import set_ryzenadj
 from g14_system.screen import get_screen, set_screen, check_screen
 from g14_system.util import *
 
-showFlash = False
-
 animatrix_object = None
 animatrix_enabled = False
 animatrix_thread = None
 animatrix_thread_running = False
-
-newDotDelay = 80
-threshold = 30
-newDotCounter = 60
-dotLength = 120
-dot = point()
-dots = []
 
 
 def readData(data):
@@ -165,15 +155,16 @@ def apply_plan(plan):
     global config, dpp_GUID, app_GUID, plugged_in, ac, game_running, icon_app
     print("Applying Plan...")
     plan_name = plan['name']
+
     set_atrofac(config, user_settings, plan['plan'], plan['cpu_curve'], plan['gpu_curve'], plugged_in=ac,
                 game_running=game_running)
     set_dgpu(config, user_settings, plan['dgpu_enabled'], plugged_in=ac, game_running=game_running)
     set_screen(config, user_settings, plan['screen_hz'], plugged_in=ac, game_running=game_running)
     set_ryzenadj(config, user_settings, plan['cpu_tdp'], plugged_in=ac, game_running=game_running)
     set_boost(config, user_settings, plan["boost"], dpp_GUID, app_GUID, plugged_in=ac, game_running=game_running)
-    apply_animatrix(user_settings.get("animatrix", None))
+    apply_animatrix(user_settings.get("animatrix", None, plugged_in=ac, game_running=game_running), shouldNotify=False)
     user_settings.set("name", plan_name, plugged_in=ac, game_running=game_running)
-    notify("Applied plan " + plan_name, config.get('notification_time'))
+    notify("Applied Plan: " + plan_name, config.get('notification_time'))
 
 
 def get_plan_by_name(plan_name):
@@ -226,11 +217,12 @@ def animatrix_object_thread():
         time.sleep(max((frame_refresh_millis - render_time_millis) / 1000, 0))
 
 
-def apply_animatrix(type=None):
+def apply_animatrix(type=None, shouldNotify=True):
     global config, animatrix_enabled, animatrix_object, mc, ac, game_running
     animatrix_thread_stop()
     user_settings.set("animatrix", type, plugged_in=ac, game_running=game_running)
-    notify("Animatrix: %s" % type.capitalize() if type else "Disabled", config.get('notification_time'))
+    if shouldNotify:
+        notify("Animatrix: %s" % (type.capitalize() if type else "Disabled"), config.get('notification_time'))
     if not type:
         return
     if type == "flash":
