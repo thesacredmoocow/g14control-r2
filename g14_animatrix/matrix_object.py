@@ -98,7 +98,7 @@ class Cloud(MatrixObject):
         return self.data
 
     def moveFrame(self, weather_config):
-        self.xVelocity = weather_config.get("wind_speed_mps", 0) / 50
+        self.xVelocity = weather_config.get("wind_speed_mps", 0)/10
         for drop in self.rain_drops:
             if drop.outOfBounds():
                 self.rain_drops.remove(drop)
@@ -111,7 +111,7 @@ class Cloud(MatrixObject):
         super().moveFrame(weather_config)
 
     def shouldAddRaindrop(self, weather_config):
-        rain_intensity = max(weather_config.get("rain_1h_mm"), weather_config.get("snow_1h_mm", 0))
+        rain_intensity = max(weather_config.get("rain_1h_mm"), weather_config.get("snow_1h_mm", 0))*5
         if rain_intensity == 0 or len(self.data) == 0:
             return False
         rainDropsBelowDensity = len(self.rain_drops) < rain_intensity
@@ -155,7 +155,7 @@ class Raindrop(MatrixObject):
         return self.data
 
     def moveFrame(self, weather_config):
-        self.xVelocity = weather_config.get("wind_speed_mps", 0) / 50
+        self.xVelocity = weather_config.get("wind_speed_mps", 0)/10
         super().moveFrame(weather_config)
 
     @staticmethod
@@ -370,7 +370,7 @@ class CloudHaze(MatrixObject):
         return debrisBelowIntensity
 
     def shouldAddRaindrop(self, weather_config):
-        rain_intensity = weather_config.get("rain_1h_mm", 0)
+        rain_intensity = weather_config.get("rain_1h_mm", 0)*5
         rainDropsInRange = [drop.yPos for drop in self.rain_drops if drop.yPos < (self.yPos + len(self.data) + 4)]
         rainDropsBelowDensity = len(rainDropsInRange) < rain_intensity
         return rainDropsBelowDensity

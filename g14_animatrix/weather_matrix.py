@@ -13,6 +13,14 @@ from g14_animatrix.matrix_object import *
 
 class Weather(Animatrix):
     matrixObjects = {}
+    weather_config = {
+        'sunrise': datetime(1970, 1, 1, 6, 0, 0),
+        'sunset': datetime(1970, 1, 1, 18, 0, 0),
+        'cloudiness_percent': 0.0,
+        'rain_1h_mm': 0.0,
+        'snow_1h_mm': 0.0,
+        'wind_speed_mps': 0.0
+    }
 
     def __init__(self, matrix_controller, location_string, openweathermap_token,
                  mountains=True,
@@ -108,15 +116,12 @@ class Weather(Animatrix):
         matrix.append([0] * 33)
         matrix.append([0] * 33)
         for i in range(0, 24, 2):
-            matrix.append([0] * (33-i))
-            matrix.append([0] * (33-i))
+            matrix.append([0] * (33 - i))
+            matrix.append([0] * (33 - i))
         return matrix
 
     def updateFrame(self):
         # DEFAULT CONFIG
-        weather_config = {'sunrise': datetime(1970, 1, 1, 6, 0, 0), 'sunset': datetime(1970, 1, 1, 18, 0, 0),
-                          'cloudiness_percent': 0.0, 'rain_1h_mm': 0.0, 'snow_1h_mm': 0.0, 'wind_speed_mps': 0.0}
-
         currentTime = datetime.now()
         if self.lastWeatherUpdate + timedelta(hours=1) < currentTime:
             try:
@@ -124,7 +129,7 @@ class Weather(Animatrix):
                     "https://api.openweathermap.org/data/2.5/weather?q=%s&APPID=%s" % (
                         self.location_string, self.openweathermap_token))
                 loads = json.loads(response.content)
-                weather_config = {
+                self.weather_config = {
                     "sunrise": datetime.fromtimestamp(
                         loads.get("sys").get("sunrise",
                                              currentTime.replace(hour=6, minute=0, second=0, microsecond=0))),
@@ -136,9 +141,9 @@ class Weather(Animatrix):
                     "snow_1h_mm": loads.get("snow", {}).get("1h", 0),
                     "wind_speed_mps": loads.get("wind", {}).get("speed", 0),
                 }
-                print("Updated Weather: %s" % weather_config)
+                print("Updated Weather: %s" % self.weather_config)
             except:
                 print("Error updating weather")
             finally:
                 self.lastWeatherUpdate = currentTime
-        self.drawFrame(weather_config)
+        self.drawFrame(self.weather_config)
