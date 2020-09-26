@@ -223,7 +223,7 @@ class Sun(MatrixObject):
         if self.isSunActive:  # between 6am and 6pm
             # 6am = 14 - len(self.data[0])
             # 6pm = 47 + len(self.data[0])
-            minX = 14 - (len(self.data[0]) / 2)
+            minX = max(14 - (len(self.data[0]) / 2), 0)
             maxX = 47
             currentStep = self.getCurrentMinuteOfDay() - (sunrise.hour * 60 + sunrise.minute)  # 0 to 12 if after 6am
             stepIncrement = (maxX - minX) / sunlightDurationInMinutes  # 13 hour block
@@ -271,7 +271,7 @@ class Moon(MatrixObject):
         sunlightDurationInMinutes = sunlightDuration.seconds / 60
         self.isMoonActive = self.isActive(sunrise, sunset)
         if self.isMoonActive:
-            minX = 14 - self.data[0]
+            minX = 14 - max(len(self.data[0]), 0)
             maxX = 47
             sunsetMinutes = ((sunset.hour * 60) + sunset.minute)
             if sunsetMinutes < self.getCurrentMinuteOfDay():
