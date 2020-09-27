@@ -14,13 +14,14 @@ from g14_animatrix.matrix_object import *
 class Weather(Animatrix):
     matrixObjects = {}
     weather_config = {
-        'sunrise': datetime(1970, 1, 1, 6, 0, 0),
-        'sunset': datetime(1970, 1, 1, 18, 0, 0),
-        'cloudiness_percent': 0.0,
-        'rain_1h_mm': 0.0,
-        'snow_1h_mm': 0.0,
-        'wind_speed_mps': 0.0
+        "sunrise": datetime.now().replace(hour=6, minute=0, second=0, microsecond=0),
+        "sunset": datetime.now().replace(hour=18, minute=0, second=0, microsecond=0),
+        "wind": 0,
+        "rain": 0,
+        "snow": 0,
+        "cloud": 0,
     }
+    weather_override = False
 
     def __init__(self, matrix_controller, location_string, openweathermap_token,
                  mountains=True,
@@ -41,12 +42,18 @@ class Weather(Animatrix):
             self.matrixObjects["mountains"] = [Mountains.generate()]
 
         self.matrixObjects["haze"] = [CloudHaze.generate()]
-        self.matrixObjects["clouds"] = []
+        # testCloud = Cloud.generate()
+        # testCloud.data = testCloud.small_cloud
+        # testCloud.xPos = 30
+        # testCloud.yPos = 35
+        self.matrixObjects["clouds"] = [
+            # testCloud
+        ]
 
     def drawFrame(self, weather_config):
         frameMatrix = self.fullMatrix()
         if self.shouldAddCloud(weather_config):
-            self.matrixObjects["clouds"].append(Cloud.generate(weather_config=weather_config))
+            self.matrixObjects["clouds"].append(Cloud.generate())
         for objectCategory in self.matrixObjects:
             for matrixObject in self.matrixObjects[objectCategory]:
                 if matrixObject.outOfBounds():
@@ -59,12 +66,12 @@ class Weather(Animatrix):
         self.drawMatrix(matrix)
 
     def shouldAddCloud(self, weather_config):
-        cloud_density = weather_config.get("cloudiness_percent", 0) / 10
-        cloudsBelowDensity = len(self.matrixObjects["clouds"]) < cloud_density / 10
+        # cloud_density = weather_config.get("cloud", 0) / 10
+        # cloudsBelowDensity = len(self.matrixObjects["clouds"]) < cloud_density / 10
         cloudPositions = [cloud.xPos for cloud in self.matrixObjects["clouds"]]
         cloudPositions.append(Frame.fullWidth())
-        lastCloudSpacedOutEnough = min(cloudPositions) > Frame.fullWidth() / max(cloud_density, 1)
-        return cloudsBelowDensity and lastCloudSpacedOutEnough
+        lastCloudSpacedOutEnough = min(cloudPositions) > Frame.fullWidth() / 8
+        return weather_config.get("cloud", 0) == 1 and lastCloudSpacedOutEnough
 
     def addObjectToMatrix(self, matrixObject, matrix, weather_config):
         matrixObject.moveFrame(weather_config)  # update the frame first with the new data.
@@ -120,28 +127,68 @@ class Weather(Animatrix):
             matrix.append([0] * (33 - i))
         return matrix
 
-    def updateFrame(self):
-        # DEFAULT CONFIG
+    def updateWeather(self, openweathermapJson):
         currentTime = datetime.now()
-        if self.lastWeatherUpdate + timedelta(hours=1) < currentTime:
+        self.weather_config = {
+            "sunrise": datetime.fromtimestamp(
+                openweathermapJson.get("sys").get("sunrise",
+                                                  currentTime.replace(hour=6, minute=0, second=0, microsecond=0))),
+            "sunset": datetime.fromtimestamp(
+                openweathermapJson.get("sys").get("sunset",
+                                                  currentTime.replace(hour=18, minute=0, second=0, microsecond=0))),
+            "wind": 0,
+            "rain": 0,
+            "snow": 0,
+            "cloud": 0,
+        }
+        # 6-11 	Light Breeze
+        # 20-28 	Moderate Breeze
+        # 39-49 	Strong gale
+        wind_speed = openweathermapJson.get("wind", {}).get("speed", 0) * 36  # km/h
+        if wind_speed > 5:
+            self.weather_config["wind"] = 1
+        elif wind_speed > 20:
+            self.weather_config["wind"] = 2
+        elif wind_speed > 40:
+            self.weather_config["wind"] = 3
+
+        # Slight rain: Less than 0.5 mm per hour.
+        # Moderate rain: Greater than 0.5 mm per hour, but less than 4.0 mm per hour.
+        # Heavy rain: Greater than 4 mm per hour, but less than 8 mm per hour.
+        rain_mm = openweathermapJson.get("rain", {}).get("1h", 0.0)
+        if rain_mm > 0.0:
+            self.weather_config["rain"] = 1
+        elif rain_mm > 0.5:
+            self.weather_config["rain"] = 2
+        elif rain_mm > 4.0:
+            self.weather_config["rain"] = 3
+
+        snow_mm = openweathermapJson.get("snow", {}).get("1h", 0)
+        if snow_mm > 0.0:
+            self.weather_config["snow"] = 1
+        elif snow_mm > 0.5:
+            self.weather_config["snow"] = 2
+        elif snow_mm > 4.0:
+            self.weather_config["snow"] = 3
+
+        cloud_percent = openweathermapJson.get("clouds", {}).get("all", 0)
+        if cloud_percent > 0.0:
+            self.weather_config["cloud"] = 1
+        elif cloud_percent > 33.0:
+            self.weather_config["cloud"] = 2
+        elif cloud_percent > 66.0:
+            self.weather_config["cloud"] = 3
+
+    def updateFrame(self):
+        currentTime = datetime.now()
+        if not self.weather_override and self.lastWeatherUpdate + timedelta(minutes=10) < currentTime:
             try:
-                response = requests.get(
-                    "https://api.openweathermap.org/data/2.5/weather?q=%s&APPID=%s" % (
-                        self.location_string, self.openweathermap_token))
-                loads = json.loads(response.content)
-                self.weather_config = {
-                    "sunrise": datetime.fromtimestamp(
-                        loads.get("sys").get("sunrise",
-                                             currentTime.replace(hour=6, minute=0, second=0, microsecond=0))),
-                    "sunset": datetime.fromtimestamp(
-                        loads.get("sys").get("sunset",
-                                             currentTime.replace(hour=18, minute=0, second=0, microsecond=0))),
-                    "cloudiness_percent": loads.get("clouds", {}).get("all", 0),
-                    "rain_1h_mm": loads.get("rain", {}).get("1h", 0),
-                    "snow_1h_mm": loads.get("snow", {}).get("1h", 0),
-                    "wind_speed_mps": loads.get("wind", {}).get("speed", 0),
-                }
+                response = requests.get("https://api.openweathermap.org/data/2.5/weather?q=%s&APPID=%s" % (
+                    self.location_string, self.openweathermap_token))
+                jsonResponse = json.loads(response.content)
+                self.updateWeather(jsonResponse)
                 print("Updated Weather: %s" % self.weather_config)
+                # print("Raw: %s" % jsonResponse)
             except:
                 print("Error updating weather")
             finally:

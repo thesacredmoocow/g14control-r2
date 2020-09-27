@@ -67,107 +67,110 @@ class Cloud(MatrixObject):
     ]
 
     small_cloud = [
-        [0, 0, 0, 0, 0],
-        [0, 9, 9, 0, 0],
-        [0, 9, 9, 9, 0],
-        [9, 1, 1, 9, 0],
-        [0, 9, 1, 1, 1],
-        [9, 1, 1, 9, 0],
-        [9, 0, 1, 1, 9],
-        [9, 9, 9, 9, 9],
+        [0, 0, 9, 9, 0, 0],
+        [0, 9, 9, 9, 0, 0],
+        [0, 9, 1, 1, 9, 0],
+        [0, 9, 1, 1, 1, 0],
+        [0, 9, 1, 1, 9, 0],
+        [9, 0, 1, 1, 9, 0],
+        [0, 9, 9, 9, 9, 9],
     ]
 
     data = []
+    cloud_speed = 0
 
-    def __init__(self, xPos=0, yPos=random.randrange(35, 41, 2), z=0.0, xVelocity=0.0, yVelocity=0.0, yStep=2,
-                 feathering=0,
-                 allowed_sizes=3):
+    def __init__(self, xPos=0, yPos=None, z=0.0, xVelocity=0.0, yVelocity=0.0, yStep=2, feathering=0):
+        if yPos is None:
+            yPos = random.randrange(29, 45, 2)
         super().__init__(xPos, yPos, z, xVelocity, yVelocity, yStep, feathering)
-        self.rain_drops = []
-        if allowed_sizes == 0:
-            self.data = [[]]
-        if allowed_sizes == 1:
-            self.data = random.choice([self.medium_cloud, self.small_cloud])
-        if allowed_sizes == 2:
-            self.data = random.choice([self.large_cloud, self.medium_cloud])
-
-    def getChildren(self):
-        return self.rain_drops
+        self.data = random.choice([self.large_cloud, self.medium_cloud, self.small_cloud])
 
     def getData(self):
         return self.data
 
     def moveFrame(self, weather_config):
-        self.xVelocity = weather_config.get("wind_speed_mps", 0)/10
-        for drop in self.rain_drops:
-            if drop.outOfBounds():
-                self.rain_drops.remove(drop)
-        if self.shouldAddRaindrop(weather_config):
-            if weather_config.get("snow_1h_mm", 0) > weather_config.get("rain_1h_mm", 0):
-                self.add_particle(yVelocity=random.randrange(1, 5, 1) / 10, yStep=1)  # snowing
-
-            else:
-                self.add_particle(yVelocity=2.0, yStep=2)  # raining
+        if self.cloud_speed != weather_config.get("wind", 0):
+            self.cloud_speed = weather_config.get("wind", 0)
+            if self.cloud_speed == 0:
+                self.xVelocity = random.randrange(2, 5) / 100  # 0.02-0.05
+            if self.cloud_speed == 1:
+                self.xVelocity = random.randrange(5, 10) / 100  # 0.05-0.1
+            if self.cloud_speed == 2:
+                self.xVelocity = random.randrange(1, 3) / 10  # 0.1-0.3
+            if self.cloud_speed == 3:
+                self.xVelocity = random.randrange(3, 6) / 10  # 0.3-0.6
         super().moveFrame(weather_config)
 
-    def shouldAddRaindrop(self, weather_config):
-        rain_intensity = max(weather_config.get("rain_1h_mm"), weather_config.get("snow_1h_mm", 0))*5
-        if rain_intensity == 0 or len(self.data) == 0:
-            return False
-        rainDropsBelowDensity = len(self.rain_drops) < rain_intensity
-        rainDropPositions = [drop.yPos for drop in self.rain_drops]
-        rainDropPositions.append(Frame.fullHeight())
-        lastDropSpacedOutEnough = min(rainDropPositions) > (
-                len(self.data) + self.yPos + (Frame.fullHeight() / rain_intensity))
-        return rainDropsBelowDensity and lastDropSpacedOutEnough
-
-    def add_particle(self, yVelocity=2.0, yStep=2):
-        rainX = random.randrange(math.floor(self.xPos), math.floor(self.xPos) + len(self.data[0])) - 1
-        rainY = len(self.data) + self.yPos
-        self.rain_drops.append(
-            Raindrop.generate(yPos=rainY, xPos=rainX, xVelocity=0, yStep=yStep, yVelocity=yVelocity))
-
     @staticmethod
-    def generate(xPos=None, xVelocity=None, weather_config=None):
-        if weather_config is None:
-            weather_config = {}
-        # Cloud.generate(xVelocity=(random.randrange(5, 10, 1) / 100), rain_intensity=self.rain_intensity))
-
-        # return Cloud(xPos=xPos, xVelocity=xVelocity, yPos=random.randrange(35, 41, 2), rain_intensity=rain_intensity)
-        # return Cloud(xPos=xPos, xVelocity=xVelocity, yPos=35, rain_intensity=rain_intensity)
-        allowed_sizes = 0
-        cloudiness = weather_config.get("cloudiness_percent", 0)
-        if 1 < cloudiness < 20:
-            allowed_sizes = 1
-        elif cloudiness < 50:
-            allowed_sizes = 2
-        else:
-            allowed_sizes = 3
-        if xPos is not None and xVelocity is not None:
-            return Cloud(allowed_sizes=allowed_sizes, xPos=xPos, xVelocity=xVelocity)
-        return Cloud(allowed_sizes=allowed_sizes)
+    def generate(xPos=0.0, xVelocity=0.0):
+        return Cloud(xPos=xPos, xVelocity=xVelocity)
 
 
 class Raindrop(MatrixObject):
-    data = [[9]]
+    data = [[3]]
 
     def getData(self):
         return self.data
 
-    def moveFrame(self, weather_config):
-        self.xVelocity = weather_config.get("wind_speed_mps", 0)/10
-        super().moveFrame(weather_config)
+    def moveFrame(self, weather_config, doubleDipped=False):
+        wind_speed = weather_config["wind"]
+        shouldDoubleDip = random.randrange(1, 10) == 1
+        if wind_speed == 0:  # no wind
+            self.yPos += 2
+        if wind_speed == 1:  # light wind
+            self.yPos += 2
+            if self.yPos % 6 == 0:
+                self.xPos += 1
+        if wind_speed == 2:  # medium wind
+            self.yPos += 2
+            if self.yPos % 4 == 0:
+                self.xPos += 1
+        if wind_speed == 3:  # heavy wind
+            self.yPos += 1
+            if self.yPos % 2 == 0:
+                self.xPos += 1
+        if not doubleDipped and shouldDoubleDip:
+            self.moveFrame(weather_config, doubleDipped=True)
 
     @staticmethod
-    def generate(xVelocity=0.0, yVelocity=2.0, xPos=0.0, yPos=0.0, yStep=2):
-        return Raindrop(yVelocity=yVelocity, xVelocity=xVelocity, xPos=xPos, yPos=yPos, yStep=yStep)
+    def generate(xPos=0.0, yPos=0.0, **kwargs):
+        return Raindrop(xPos=xPos, yPos=yPos)
 
 
 class Snowflake(Raindrop):
+    data = [[9]]
+
+    fall_rate = 0.5
+
+    def getData(self):
+        return self.data
 
     @staticmethod
-    def generate(xVelocity=0.0, yVelocity=2.0, xPos=0.0, yPos=0.0, yStep=1):
-        return Snowflake(yVelocity=yVelocity, xVelocity=xVelocity, xPos=xPos, yPos=yPos, yStep=yStep)
+    def generate(xPos=0.0, yPos=0.0, **kwargs):
+        return Snowflake(xPos=xPos, yPos=yPos)
+
+    def moveFrame(self, weather_config, doubleDipped=False):
+        shouldDoubleDip = random.randrange(1, 10) == 1
+        wind_speed = weather_config["wind"]
+        yChange = 0
+        xChange = 0
+        if wind_speed == 0:  # no wind
+            yChange += 1
+        elif wind_speed == 1:  # light wind
+            yChange += 1
+            if self.yPos % 4 == 0:
+                xChange += 1
+        elif wind_speed == 2:  # medium wind
+            yChange += 1
+            if self.yPos % 2 == 0:
+                xChange += 1
+        elif wind_speed == 3:  # heavy wind
+            yChange += 0.5
+            xChange += 1
+        self.yPos += (self.fall_rate * yChange)
+        self.xPos += (self.fall_rate * xChange)
+        if not doubleDipped and shouldDoubleDip:
+            self.moveFrame(weather_config, doubleDipped=True)
 
 
 class WindDebris(Raindrop):
@@ -177,8 +180,8 @@ class WindDebris(Raindrop):
         return self.data
 
     @staticmethod
-    def generate(xVelocity=0.0, xPos=0.0, yPos=random.randrange(30, 60), **kwargs):
-        return WindDebris(yVelocity=0.01, xVelocity=xVelocity, xPos=xPos, yPos=yPos)
+    def generate(xPos=0.0, yPos=random.randrange(30, 60), **kwargs):
+        return WindDebris(yVelocity=0.01, xPos=xPos, yPos=yPos)
 
 
 class Sun(MatrixObject):
@@ -322,13 +325,14 @@ class CloudHaze(MatrixObject):
         return self.rain_drops + self.snowflakes + self.wind_debris
 
     def moveFrame(self, weather_config):
-        newHaze = weather_config.get("cloudiness_percent", 0)
+        newHaze = weather_config.get("cloud", 0)
+        wind = weather_config.get("wind", 0)
 
         if newHaze != self.lastHaze:
             self.lastHaze = newHaze
-            if newHaze < 33:
+            if newHaze < 2:
                 self.data = []
-            elif newHaze < 66:
+            elif newHaze < 3:
                 self.updateData(1)
             else:
                 self.updateData(2)
@@ -343,47 +347,53 @@ class CloudHaze(MatrixObject):
             if snowflake.outOfBounds():
                 self.snowflakes.remove(snowflake)
         while self.shouldAddSnowflake(weather_config):
-            self.add_particle(particle_type="snow")  # snowing
+            self.add_particle(particle_type="snow", wind=wind)  # snowing
 
         for debris in self.wind_debris:
             if debris.outOfBounds():
                 self.wind_debris.remove(debris)
         while self.shouldAddWindDebris(weather_config):
-            self.add_particle(particle_type="debris")  # nothing
+            self.add_particle(particle_type="debris", wind=wind)  # nothing
         return  # do nothing
 
     def shouldAddSnowflake(self, weather_config):
-        snow_intensity = weather_config.get("snow_1h_mm", 0)
-        if snow_intensity == 0:
-            return False
-        snowflakesInRange = [snowflake.yPos for snowflake in self.snowflakes if
-                             snowflake.yPos < (self.yPos + len(self.data) + 4)]
+        snow_intensity = weather_config.get("snow", 0) * 5
+        snowflakesInRange = [drop.yPos for drop in self.snowflakes if drop.yPos < (self.yPos + len(self.data) + 4)]
         snowflakesBelowDensity = len(snowflakesInRange) < snow_intensity
         return snowflakesBelowDensity
 
     def shouldAddWindDebris(self, weather_config):
-        if weather_config.get("snow_1h_mm", 0) > 0 \
-                or weather_config.get("rain_1h_mm", 0) > 0:
+        if weather_config.get("snow", 0) > 0 or weather_config.get("rain", 0) > 0:
             return False
         debrisInRange = [debris.xPos for debris in self.wind_debris if debris.xPos < (self.xPos + 20)]
         debrisBelowIntensity = len(debrisInRange) < 3
         return debrisBelowIntensity
 
     def shouldAddRaindrop(self, weather_config):
-        rain_intensity = weather_config.get("rain_1h_mm", 0)*5
+        rain_intensity = weather_config.get("rain", 0) * 5
         rainDropsInRange = [drop.yPos for drop in self.rain_drops if drop.yPos < (self.yPos + len(self.data) + 4)]
         rainDropsBelowDensity = len(rainDropsInRange) < rain_intensity
         return rainDropsBelowDensity
 
-    def add_particle(self, particle_type="rain"):
-        xPos = random.randrange(10, 50)
-        yPos = self.yPos + len(self.data) - 1
+    def add_particle(self, particle_type="rain", wind=0):
+        if wind == 0:
+            xPos = random.randrange(10, 50)
+            yPos = self.yPos + len(self.data) - 1
+        else:
+            if wind == 1:
+                xPos = random.randrange(0, 50)
+            elif wind == 2:
+                xPos = random.randrange(0, 40)
+            else:
+                xPos = random.randrange(0, 30)
+            yPos = random.randrange(30, 60) if xPos < 10 else self.yPos + len(self.data) - 1
+
         if particle_type == "debris":
             self.wind_debris.append(WindDebris.generate())
         elif particle_type == "snow":
             self.snowflakes.append(Snowflake.generate(yPos=yPos, xPos=xPos, xVelocity=0.0, yStep=1,
                                                       yVelocity=random.randrange(1, 5, 1) / 10))
-        else:
+        else:  # Rain
             self.rain_drops.append(Raindrop.generate(yPos=yPos, xPos=xPos, xVelocity=0.0,
                                                      yVelocity=random.randrange(10, 20, 1) / 10))
 
