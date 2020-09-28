@@ -147,9 +147,9 @@ class Weather(Animatrix):
         wind_speed = openweathermapJson.get("wind", {}).get("speed", 0) * 36  # km/h
         if wind_speed > 5:
             self.weather_config["wind"] = 1
-        elif wind_speed > 20:
+        if wind_speed > 20:
             self.weather_config["wind"] = 2
-        elif wind_speed > 40:
+        if wind_speed > 40:
             self.weather_config["wind"] = 3
 
         # Slight rain: Less than 0.5 mm per hour.
@@ -158,25 +158,25 @@ class Weather(Animatrix):
         rain_mm = openweathermapJson.get("rain", {}).get("1h", 0.0)
         if rain_mm > 0.0:
             self.weather_config["rain"] = 1
-        elif rain_mm > 0.5:
+        if rain_mm > 0.5:
             self.weather_config["rain"] = 2
-        elif rain_mm > 4.0:
+        if rain_mm > 4.0:
             self.weather_config["rain"] = 3
 
         snow_mm = openweathermapJson.get("snow", {}).get("1h", 0)
         if snow_mm > 0.0:
             self.weather_config["snow"] = 1
-        elif snow_mm > 0.5:
+        if snow_mm > 0.5:
             self.weather_config["snow"] = 2
-        elif snow_mm > 4.0:
+        if snow_mm > 4.0:
             self.weather_config["snow"] = 3
 
         cloud_percent = openweathermapJson.get("clouds", {}).get("all", 0)
         if cloud_percent > 0.0:
             self.weather_config["cloud"] = 1
-        elif cloud_percent > 33.0:
+        if cloud_percent > 33.0:
             self.weather_config["cloud"] = 2
-        elif cloud_percent > 66.0:
+        if cloud_percent > 66.0:
             self.weather_config["cloud"] = 3
 
     def updateFrame(self):
@@ -188,7 +188,7 @@ class Weather(Animatrix):
                 jsonResponse = json.loads(response.content)
                 self.updateWeather(jsonResponse)
                 print("Updated Weather: %s" % self.weather_config)
-                # print("Raw: %s" % jsonResponse)
+                print("Raw: %s" % json.dumps(jsonResponse, indent=3))
             except:
                 print("Error updating weather")
             finally:
