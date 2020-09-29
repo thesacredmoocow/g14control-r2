@@ -275,12 +275,12 @@ class Moon(MatrixObject):
         if self.isMoonActive:
             minX = 14 - max(len(self.data[0]), 0)
             maxX = 47
-            sunsetMinutes = ((sunset.hour * 60) + sunset.minute)
+            sunsetMinutes = (((sunset.hour-1) * 60) + sunset.minute)
             if sunsetMinutes < self.getCurrentMinuteOfDay():
                 currentStep = self.getCurrentMinuteOfDay() - sunsetMinutes  # start of night (1700 - 2359)
             else:
                 currentStep = self.getCurrentMinuteOfDay() + (
-                        (sunrise.hour * 60) + sunrise.minute)  # end of night (0000 - 0600)
+                        ((sunrise.hour-1) * 60) + sunrise.minute)  # end of night (0000 - 0600)
             stepIncrement = (maxX - minX) / sunlightDurationInMinutes  # 13 hour block
             self.xPos = max(minX + (stepIncrement * currentStep), 0)
 

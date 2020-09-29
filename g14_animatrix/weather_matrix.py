@@ -144,7 +144,7 @@ class Weather(Animatrix):
         # 6-11 	Light Breeze
         # 20-28 	Moderate Breeze
         # 39-49 	Strong gale
-        wind_speed = openweathermapJson.get("wind", {}).get("speed", 0) * 36  # km/h
+        wind_speed = openweathermapJson.get("wind", {}).get("speed", 0) * 3.6  # km/h
         if wind_speed > 5:
             self.weather_config["wind"] = 1
         if wind_speed > 20:
@@ -172,7 +172,7 @@ class Weather(Animatrix):
             self.weather_config["snow"] = 3
 
         cloud_percent = openweathermapJson.get("clouds", {}).get("all", 0)
-        if cloud_percent > 0.0:
+        if cloud_percent > 10.0:
             self.weather_config["cloud"] = 1
         if cloud_percent > 33.0:
             self.weather_config["cloud"] = 2
